@@ -1,0 +1,866 @@
+{% extends 'gestion_rdv/base.html' %}
+{% load static %}
+
+{% block title %}RDV {{ rdv.patient.nom }} {{ rdv.patient.prenom }} - Cabinet Médical{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home me-1"></i>Accueil
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'gestion_rdv:rdv_list' %}">
+                <i class="fas fa-calendar-alt me-1"></i>Rendez-vous
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            RDV {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête avec informations principales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-calendar-check me-2"></i>
+                                Rendez-vous du {{ rdv.date_heure_debut|date:"d/m/Y à H:i" }}
+                            </h2>
+                            <p class="mb-1 opacity-75">
+                                <i class="fas fa-user me-1"></i>
+                                <strong>{{ rdv.patient.nom }} {{ rdv.patient.prenom }}</strong>
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-user-md me-1"></i>
+                                Dr. {{ rdv.medecin.utilisateur.nom_complet }}
+                            </p>
+                            <p class="mb-0 opacity-75">
+                                <i class="fas fa-clock me-1"></i>
+                                Durée: {{ rdv.duree_minutes }} minutes
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-stethoscope me-1"></i>
+                                {{ rdv.get_type_consultation_display }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="h1 mb-0 opacity-75">
+                                {% if rdv.statut_rdv == 'PLANIFIE' %}
+                                    <i class="fas fa-clock text-warning"></i>
+                                {% elif rdv.statut_rdv == 'CONFIRME' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% elif rdv.statut_rdv == 'TERMINE' %}
+                                    <i class="fas fa-check-double text-info"></i>
+                                {% elif rdv.statut_rdv == 'ANNULE' %}
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations détaillées -->
+        <div class="col-lg-8 mb-4">
+            <!-- Détails du rendez-vous -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Détails du rendez-vous
+                    </h5>
+                    <div class="btn-group">
+                        {% if user.role == 'SECRETAIRE' %}
+                            {% if rdv.statut_rdv in 'PLANIFIE,CONFIRME' %}
+                                <a href="{% url 'gestion_rdv:rdv_update' rdv.pk %}" 
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Modifier
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                        onclick="cancelRDV()">
+                                    <i class="fas fa-times me-1"></i>Annuler
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                onclick="printRDV()">
+                            <i class="fas fa-print me-1"></i>Imprimer
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Date et heure</label>
+                                <p class="form-control-plaintext">
+                                    <i class="fas fa-calendar me-1 text-primary"></i>
+                                    {{ rdv.date_heure_debut|date:"l d F Y" }}
+                                    <br>
+                                    <i class="fas fa-clock me-1 text-success"></i>
+                                    {{ rdv.date_heure_debut|date:"H:i" }} - {{ rdv.date_heure_fin|date:"H:i" }}
+                                    <small class="text-muted">({{ rdv.duree_minutes }} minutes)</small>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Type de consultation</label>
+                                <p class="form-control-plaintext">
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-stethoscope me-1"></i>
+                                        {{ rdv.get_type_consultation_display }}
+                                    </span>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Statut</label>
+                                <p class="form-control-plaintext">
+                                    {% if rdv.statut_rdv == 'PLANIFIE' %}
+                                        <span class="badge bg-warning fs-6">
+                                            <i class="fas fa-clock me-1"></i>{{ rdv.get_statut_rdv_display }}
+                                        </span>
+                                    {% elif rdv.statut_rdv == 'CONFIRME' %}
+                                        <span class="badge bg-success fs-6">
+                                            <i class="fas fa-check me-1"></i>{{ rdv.get_statut_rdv_display }}
+                                        </span>
+                                    {% elif rdv.statut_rdv == 'TERMINE' %}
+                                        <span class="badge bg-primary fs-6">
+                                            <i class="fas fa-check-circle me-1"></i>{{ rdv.get_statut_rdv_display }}
+                                        </span>
+                                    {% elif rdv.statut_rdv == 'ANNULE' %}
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="fas fa-times me-1"></i>{{ rdv.get_statut_rdv_display }}
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Créé par</label>
+                                <p class="form-control-plaintext">
+                                    <i class="fas fa-user-tie me-1 text-info"></i>
+                                    {{ rdv.secretaire_creation.nom_complet }}
+                                    <br>
+                                    <small class="text-muted">
+                                        Le {{ rdv.date_creation_rdv|date:"d/m/Y à H:i" }}
+                                    </small>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Dernière modification</label>
+                                <p class="form-control-plaintext">
+                                    <i class="fas fa-edit me-1 text-warning"></i>
+                                    {{ rdv.date_derniere_maj_rdv|date:"d/m/Y à H:i" }}
+                                </p>
+                            </div>
+                            
+                            {% if rdv.date_heure_debut|date:'Y-m-d' == today|date:'Y-m-d' %}
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Rendez-vous d'aujourd'hui</strong>
+                                    </div>
+                                </div>
+                            {% elif rdv.date_heure_debut > now %}
+                                <div class="mb-3">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <strong>Dans {{ rdv.date_heure_debut|timeuntil }}</strong>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Notes du rendez-vous -->
+                    {% if rdv.notes_rdv %}
+                        <hr class="my-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">
+                                <i class="fas fa-sticky-note me-1"></i>Notes du rendez-vous
+                            </label>
+                            <div class="alert alert-light border">
+                                {{ rdv.notes_rdv|linebreaksbr }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informations patient -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2 text-success"></i>Informations du patient
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Nom complet</label>
+                                <p class="form-control-plaintext">
+                                    <a href="{% url 'gestion_rdv:patient_detail' rdv.patient.pk %}" 
+                                       class="text-decoration-none fw-bold">
+                                        {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
+                                    </a>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Téléphone</label>
+                                <p class="form-control-plaintext">
+                                    <i class="fas fa-phone me-1 text-success"></i>
+                                    <a href="tel:{{ rdv.patient.telephone }}" 
+                                       class="text-decoration-none">
+                                        {{ rdv.patient.telephone }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Âge</label>
+                                <p class="form-control-plaintext">
+                                    {% if rdv.patient.date_naissance %}
+                                        {{ rdv.patient.date_naissance|timesince|split:",":|first }}
+                                        <small class="text-muted">
+                                            (né{{ rdv.patient.prenom|slice:"-1" == "e"|yesno:"e," }} le {{ rdv.patient.date_naissance|date:"d/m/Y" }})
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">Non renseigné</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Email</label>
+                                <p class="form-control-plaintext">
+                                    {% if rdv.patient.email %}
+                                        <i class="fas fa-envelope me-1 text-info"></i>
+                                        <a href="mailto:{{ rdv.patient.email }}" 
+                                           class="text-decoration-none">
+                                            {{ rdv.patient.email }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Non renseigné</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if rdv.patient.notes_administratives %}
+                        <hr class="my-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">
+                                <i class="fas fa-notes-medical me-1"></i>Notes administratives
+                            </label>
+                            <div class="alert alert-warning">
+                                {{ rdv.patient.notes_administratives|linebreaksbr }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar avec actions et informations -->
+        <div class="col-lg-4">
+            <!-- Actions rapides -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <!-- Contact patient -->
+                        <div class="btn-group">
+                            <a href="tel:{{ rdv.patient.telephone }}" 
+                               class="btn btn-success">
+                                <i class="fas fa-phone me-2"></i>Appeler le patient
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-success dropdown-toggle dropdown-toggle-split" 
+                                    data-bs-toggle="dropdown">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="tel:{{ rdv.patient.telephone }}">
+                                    <i class="fas fa-phone me-1"></i>Appel vocal
+                                </a></li>
+                                <li><a class="dropdown-item" href="sms:{{ rdv.patient.telephone }}">
+                                    <i class="fas fa-sms me-1"></i>Envoyer SMS
+                                </a></li>
+                                {% if rdv.patient.email %}
+                                    <li><a class="dropdown-item" href="mailto:{{ rdv.patient.email }}">
+                                        <i class="fas fa-envelope me-1"></i>Envoyer email
+                                    </a></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Voir profil patient -->
+                        <a href="{% url 'gestion_rdv:patient_detail' rdv.patient.pk %}" 
+                           class="btn btn-info">
+                            <i class="fas fa-user me-2"></i>Profil du patient
+                        </a>
+                        
+                        <!-- Planning médecin -->
+                        <a href="{% url 'gestion_rdv:planning_medecin' rdv.medecin.pk %}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-calendar-user me-2"></i>Planning Dr. {{ rdv.medecin.utilisateur.nom_complet|truncatewords:2 }}
+                        </a>
+                        
+                        {% if user.role == 'SECRETAIRE' %}
+                            <!-- Nouveau RDV pour ce patient -->
+                            <a href="{% url 'gestion_rdv:rdv_create' %}?patient={{ rdv.patient.pk }}" 
+                               class="btn btn-outline-success">
+                                <i class="fas fa-plus me-2"></i>Nouveau RDV pour ce patient
+                            </a>
+                            
+                            <!-- Modifier si possible -->
+                            {% if rdv.statut_rdv in 'PLANIFIE,CONFIRME' %}
+                                <a href="{% url 'gestion_rdv:rdv_update' rdv.pk %}" 
+                                   class="btn btn-warning">
+                                    <i class="fas fa-edit me-2"></i>Modifier ce RDV
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- Retour -->
+                        <a href="{% url 'gestion_rdv:rdv_list' %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations médecin -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user-md me-2 text-primary"></i>Médecin
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar me-3">
+                            <div class="avatar-circle bg-primary text-white">
+                                {{ rdv.medecin.utilisateur.nom_complet|first|upper }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fw-bold">
+                                <a href="{% url 'gestion_rdv:medecin_detail' rdv.medecin.pk %}" 
+                                   class="text-decoration-none">
+                                    Dr. {{ rdv.medecin.utilisateur.nom_complet }}
+                                </a>
+                            </div>
+                            <small class="text-muted">{{ rdv.medecin.specialite }}</small>
+                        </div>
+                    </div>
+                    
+                    {% if rdv.medecin.telephone_professionnel %}
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i>
+                                <a href="tel:{{ rdv.medecin.telephone_professionnel }}" 
+                                   class="text-decoration-none">
+                                    {{ rdv.medecin.telephone_professionnel }}
+                                </a>
+                            </small>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'gestion_rdv:planning_medecin' rdv.medecin.pk %}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-calendar me-1"></i>Voir son planning
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historique des RDV de ce patient -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2 text-info"></i>Autres RDV de ce patient
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% with autres_rdv=rdv.patient.rendezvous_set.all|slice:":5" %}
+                        {% if autres_rdv %}
+                            <div class="list-group list-group-flush">
+                                {% for autre_rdv in autres_rdv %}
+                                    {% if autre_rdv.pk != rdv.pk %}
+                                        <div class="list-group-item px-0 py-2 border-0">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold small">
+                                                        {{ autre_rdv.date_heure_debut|date:"d/m/Y H:i" }}
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        Dr. {{ autre_rdv.medecin.utilisateur.nom_complet|truncatewords:2 }}
+                                                    </div>
+                                                    <div class="small">
+                                                        <span class="badge bg-{% if autre_rdv.statut_rdv == 'PLANIFIE' %}warning{% elif autre_rdv.statut_rdv == 'CONFIRME' %}success{% elif autre_rdv.statut_rdv == 'TERMINE' %}primary{% else %}danger{% endif %} text-white">
+                                                            {{ autre_rdv.get_statut_rdv_display }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <a href="{% url 'gestion_rdv:rdv_detail' autre_rdv.pk %}" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="{% url 'gestion_rdv:patient_detail' rdv.patient.pk %}" 
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-list me-1"></i>Voir tout l'historique
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                                <p class="text-muted small mb-0">Premier rendez-vous</p>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation d'annulation -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    Confirmer l'annulation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir annuler ce rendez-vous ?</p>
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action ne peut pas être annulée. 
+                    Le patient devra être prévenu de l'annulation.
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notifyPatient" checked>
+                    <label class="form-check-label" for="notifyPatient">
+                        Notifier le patient par téléphone
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Annuler
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmCancelRDV()">
+                    <i class="fas fa-times me-1"></i>Confirmer l'annulation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.form-control-plaintext {
+    padding-left: 0;
+    padding-right: 0;
+    margin-bottom: 0;
+}
+
+.badge.fs-6 {
+    font-size: 0.9rem !important;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.list-group-item {
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.btn {
+    border-radius: 6px;
+}
+
+@media print {
+    .btn, .dropdown, .card-header .btn-group, 
+    .breadcrumb, #sidebar {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+        page-break-inside: avoid;
+    }
+    
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-lg-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .col-lg-4 {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation d'apparition des cartes
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Mettre en évidence si c'est un RDV d'aujourd'hui
+    const isToday = '{{ rdv.date_heure_debut|date:"Y-m-d" }}' === '{{ today|date:"Y-m-d" }}';
+    if (isToday) {
+        document.title = '🔴 ' + document.title;
+    }
+});
+
+// Fonction pour annuler le RDV
+function cancelRDV() {
+    new bootstrap.Modal(document.getElementById('cancelModal')).show();
+}
+
+function confirmCancelRDV() {
+    const notifyPatient = document.getElementById('notifyPatient').checked;
+    
+    fetch('{% url "gestion_rdv:rdv_cancel" rdv.pk %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            'notify_patient': notifyPatient
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Fermer la modal
+            bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+            
+            // Afficher un message de succès
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Rendez-vous annulé avec succès</strong>
+                ${notifyPatient ? '<br><small>N\'oubliez pas de contacter le patient.</small>' : ''}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.container-fluid').insertBefore(alert, document.querySelector('.row'));
+            
+            // Recharger la page après 2 secondes
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            alert('Erreur lors de l\'annulation du rendez-vous');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'annulation du rendez-vous');
+    });
+}
+
+// Fonction pour imprimer le RDV
+function printRDV() {
+    window.print();
+}
+
+// Raccourcis clavier
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'p':
+                e.preventDefault();
+                printRDV();
+                break;
+            {% if user.role == 'SECRETAIRE' %}
+            case 'e':
+                e.preventDefault();
+                {% if rdv.statut_rdv in 'PLANIFIE,CONFIRME' %}
+                    window.location.href = '{% url "gestion_rdv:rdv_update" rdv.pk %}';
+                {% endif %}
+                break;
+            case 'Delete':
+                e.preventDefault();
+                {% if rdv.statut_rdv in 'PLANIFIE,CONFIRME' %}
+                    cancelRDV();
+                {% endif %}
+                break;
+            {% endif %}
+            case 'Escape':
+                e.preventDefault();
+                window.location.href = '{% url "gestion_rdv:rdv_list" %}';
+                break;
+        }
+    }
+});
+
+// Auto-actualisation si c'est un RDV d'aujourd'hui
+const isToday = '{{ rdv.date_heure_debut|date:"Y-m-d" }}' === '{{ today|date:"Y-m-d" }}';
+const rdvTime = new Date('{{ rdv.date_heure_debut|date:"c" }}');
+const now = new Date();
+
+if (isToday && rdvTime > now) {
+    // Calculer le temps restant jusqu'au RDV
+    const timeUntilRDV = rdvTime - now;
+    
+    // Si le RDV est dans moins de 2 heures, actualiser toutes les minutes
+    if (timeUntilRDV < 2 * 60 * 60 * 1000) {
+        setInterval(function() {
+            const currentTime = new Date();
+            const timeLeft = rdvTime - currentTime;
+            
+            if (timeLeft <= 0) {
+                // Le RDV est maintenant
+                location.reload();
+            } else if (timeLeft < 30 * 60 * 1000) {
+                // Moins de 30 minutes, afficher une notification
+                showRDVReminder(Math.floor(timeLeft / 60000));
+            }
+        }, 60000); // Vérifier toutes les minutes
+    }
+}
+
+function showRDVReminder(minutesLeft) {
+    const existingReminder = document.getElementById('rdv-reminder');
+    if (existingReminder) {
+        existingReminder.remove();
+    }
+    
+    const reminder = document.createElement('div');
+    reminder.id = 'rdv-reminder';
+    reminder.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+    reminder.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    reminder.innerHTML = `
+        <i class="fas fa-clock me-2"></i>
+        <strong>Rappel :</strong> Rendez-vous dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}<br>
+        <small>{{ rdv.patient.nom }} {{ rdv.patient.prenom }} - Dr. {{ rdv.medecin.utilisateur.nom_complet }}</small>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="mt-2">
+            <a href="tel:{{ rdv.patient.telephone }}" class="btn btn-sm btn-success me-2">
+                <i class="fas fa-phone me-1"></i>Appeler
+            </a>
+            <button class="btn btn-sm btn-primary" onclick="this.closest('.alert').remove()">
+                <i class="fas fa-check me-1"></i>OK
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(reminder);
+    
+    // Son de notification (si supporté)
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Rappel de rendez-vous', {
+            body: `RDV avec {{ rdv.patient.nom }} {{ rdv.patient.prenom }} dans ${minutesLeft} minutes`,
+            icon: '/static/favicon.ico'
+        });
+    }
+}
+
+// Demander permission pour les notifications
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// Gestion des liens de contact
+document.addEventListener('click', function(e) {
+    if (e.target.closest('a[href^="tel:"]')) {
+        // Marquer le contact comme effectué
+        const contactLink = e.target.closest('a');
+        setTimeout(() => {
+            contactLink.classList.add('text-success');
+            contactLink.innerHTML = contactLink.innerHTML.replace('fas fa-phone', 'fas fa-phone text-success');
+        }, 100);
+    }
+});
+
+// Fonction pour envoyer un SMS de rappel
+function sendSMSReminder() {
+    const message = `Bonjour ${rdv.patient.prenom}, rappel de votre RDV le {{ rdv.date_heure_debut|date:"d/m/Y à H:i" }} avec Dr. {{ rdv.medecin.utilisateur.nom_complet }}. Cabinet Médical.`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`sms:{{ rdv.patient.telephone }}?body=${encodedMessage}`, '_blank');
+}
+
+// Fonction pour envoyer un email de rappel
+function sendEmailReminder() {
+    const subject = encodeURIComponent('Rappel de rendez-vous - Cabinet Médical');
+    const body = encodeURIComponent(`
+Bonjour {{ rdv.patient.prenom }},
+
+Nous vous rappelons votre rendez-vous :
+
+Date : {{ rdv.date_heure_debut|date:"l d F Y" }}
+Heure : {{ rdv.date_heure_debut|date:"H:i" }}
+Médecin : Dr. {{ rdv.medecin.utilisateur.nom_complet }}
+Type : {{ rdv.get_type_consultation_display }}
+Durée : {{ rdv.duree_minutes }} minutes
+
+En cas d'empêchement, merci de nous prévenir au plus tôt.
+
+Cordialement,
+L'équipe du Cabinet Médical
+    `);
+    
+    window.open(`mailto:{{ rdv.patient.email }}?subject=${subject}&body=${body}`, '_blank');
+}
+
+// Ajouter les boutons de rappel dans le dropdown de contact
+document.addEventListener('DOMContentLoaded', function() {
+    const contactDropdown = document.querySelector('.btn-success + .dropdown-menu');
+    if (contactDropdown && '{{ rdv.date_heure_debut|date:"Y-m-d" }}' >= '{{ today|date:"Y-m-d" }}') {
+        contactDropdown.innerHTML += `
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="sendSMSReminder()">
+                <i class="fas fa-bell me-1"></i>SMS de rappel
+            </a></li>
+            {% if rdv.patient.email %}
+            <li><a class="dropdown-item" href="#" onclick="sendEmailReminder()">
+                <i class="fas fa-envelope-open me-1"></i>Email de rappel
+            </a></li>
+            {% endif %}
+        `;
+    }
+});
+
+// Fonction pour copier les informations du RDV
+function copyRDVInfo() {
+    const rdvInfo = `
+Rendez-vous du {{ rdv.date_heure_debut|date:"d/m/Y à H:i" }}
+Patient : {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
+Médecin : Dr. {{ rdv.medecin.utilisateur.nom_complet }}
+Type : {{ rdv.get_type_consultation_display }}
+Statut : {{ rdv.get_statut_rdv_display }}
+Téléphone : {{ rdv.patient.telephone }}
+    `.trim();
+    
+    navigator.clipboard.writeText(rdvInfo).then(() => {
+        // Afficher un toast de confirmation
+        const toast = document.createElement('div');
+        toast.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header">
+                    <i class="fas fa-copy text-primary me-2"></i>
+                    <strong class="me-auto">Copié</strong>
+                </div>
+                <div class="toast-body">
+                    Les informations du RDV ont été copiées dans le presse-papiers.
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    });
+}
+
+// Ajouter le raccourci de copie
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'c' && !window.getSelection().toString()) {
+        e.preventDefault();
+        copyRDVInfo();
+    }
+});
+
+// Gestion de l'historique des modifications
+function showEditHistory() {
+    // Cette fonction pourrait être implémentée pour afficher l'historique
+    // des modifications du rendez-vous
+    alert('Fonctionnalité d\'historique des modifications à implémenter');
+}
+</script>
+{% endblock %}

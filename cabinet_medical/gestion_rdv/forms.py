@@ -71,7 +71,7 @@ class MedecinUserForm(UserCreationForm):
         })
     )
     
-    class Meta(UserCreationForm.Meta):
+    class Meta:
         model = Utilisateur
         fields = ('username', 'nom_complet', 'password1', 'password2')
         widgets = {

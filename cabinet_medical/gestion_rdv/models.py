@@ -33,6 +33,24 @@ class Utilisateur(AbstractUser):
         verbose_name='Date de création du compte'
     )
     
+    # Fix reverse accessor conflicts
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        related_name='utilisateur_set',
+        related_query_name='utilisateur',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name='utilisateur_set',
+        related_query_name='utilisateur',
+    )
+    
     class Meta:
         verbose_name = 'Utilisateur'
         verbose_name_plural = 'Utilisateurs'

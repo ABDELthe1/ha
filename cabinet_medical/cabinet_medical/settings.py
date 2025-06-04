@@ -151,3 +151,5 @@ MESSAGE_TAGS = {
 DATE_FORMAT = 'd/m/Y'
 DATETIME_FORMAT = 'd/m/Y H:i'
 USE_L10N = False
+# Add this line at the end of settings.py
+AUTH_USER_MODEL = 'gestion_rdv.Utilisateur'

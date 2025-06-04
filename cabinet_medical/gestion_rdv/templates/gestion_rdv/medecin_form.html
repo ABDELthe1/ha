@@ -1,0 +1,503 @@
+{% extends 'gestion_rdv/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if medecin.pk %}
+        Modifier Dr. {{ medecin.utilisateur.nom_complet }} - Cabinet Médical
+    {% else %}
+        Nouveau Médecin - Cabinet Médical
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home me-1"></i>Accueil
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'gestion_rdv:medecins_list' %}">
+                <i class="fas fa-user-md me-1"></i>Médecins
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            {% if medecin.pk %}
+                Modifier Dr. {{ medecin.utilisateur.nom_complet }}
+            {% else %}
+                Nouveau médecin
+            {% endif %}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-user-md me-2"></i>
+                                {% if medecin.pk %}
+                                    Modifier le médecin
+                                {% else %}
+                                    Nouveau médecin
+                                {% endif %}
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                {% if medecin.pk %}
+                                    Modification des informations de Dr. {{ medecin.utilisateur.nom_complet }}
+                                {% else %}
+                                    Création d'un nouveau profil médecin dans le cabinet
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="h1 mb-0 opacity-75">
+                                <i class="fas fa-{% if medecin.pk %}edit{% else %}plus-circle{% endif %}"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Formulaire principal -->
+            <div class="col-lg-8 mb-4">
+                <!-- Informations utilisateur (pour nouveau médecin) -->
+                {% if not medecin.pk and user_form %}
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2 text-primary"></i>Compte utilisateur
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.username.id_for_label }}" class="form-label">
+                                            <i class="fas fa-at me-1"></i>{{ user_form.username.label }}
+                                        </label>
+                                        {{ user_form.username }}
+                                        {% if user_form.username.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.username.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Nom d'utilisateur pour la connexion</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.nom_complet.id_for_label }}" class="form-label">
+                                            <i class="fas fa-user me-1"></i>{{ user_form.nom_complet.label }}
+                                        </label>
+                                        {{ user_form.nom_complet }}
+                                        {% if user_form.nom_complet.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.nom_complet.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Ex: Dr. Martin Dupont</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.password1.id_for_label }}" class="form-label">
+                                            <i class="fas fa-lock me-1"></i>{{ user_form.password1.label }}
+                                        </label>
+                                        {{ user_form.password1 }}
+                                        {% if user_form.password1.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.password1.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ user_form.password2.id_for_label }}" class="form-label">
+                                            <i class="fas fa-lock me-1"></i>{{ user_form.password2.label }}
+                                        </label>
+                                        {{ user_form.password2 }}
+                                        {% if user_form.password2.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in user_form.password2.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Informations professionnelles -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-stethoscope me-2 text-success"></i>Informations professionnelles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.specialite.id_for_label }}" class="form-label">
+                                        <i class="fas fa-heartbeat me-1"></i>{{ form.specialite.label }}
+                                    </label>
+                                    {{ form.specialite }}
+                                    {% if form.specialite.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.specialite.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Ex: Cardiologie, Médecine générale, Pédiatrie...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.telephone_professionnel.id_for_label }}" class="form-label">
+                                        <i class="fas fa-phone me-1"></i>{{ form.telephone_professionnel.label }}
+                                    </label>
+                                    {{ form.telephone_professionnel }}
+                                    {% if form.telephone_professionnel.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.telephone_professionnel.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Numéro de téléphone direct (optionnel)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horaires de consultation -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clock me-2 text-warning"></i>Horaires de consultation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Configuration des horaires</strong><br>
+                            Définissez les créneaux de consultation pour chaque jour de la semaine. 
+                            Laissez vide les jours de congé.
+                        </div>
+                        
+                        <div class="row">
+                            {% for jour in 'lundi,mardi,mercredi,jeudi,vendredi,samedi'|split:',' %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-light">
+                                        <div class="card-header bg-light py-2">
+                                            <h6 class="mb-0 text-capitalize">
+                                                <i class="fas fa-calendar-day me-1"></i>{{ jour }}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body py-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <label for="id_{{ jour }}_debut" class="form-label">Début</label>
+                                                    {% with field_name=jour|add:'_debut' %}
+                                                        {% for field in form %}
+                                                            {% if field.name == field_name %}
+                                                                {{ field }}
+                                                                {% if field.errors %}
+                                                                    <div class="invalid-feedback d-block">
+                                                                        {% for error in field.errors %}
+                                                                            {{ error }}
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endwith %}
+                                                </div>
+                                                <div class="col-6">
+                                                    <label for="id_{{ jour }}_fin" class="form-label">Fin</label>
+                                                    {% with field_name=jour|add:'_fin' %}
+                                                        {% for field in form %}
+                                                            {% if field.name == field_name %}
+                                                                {{ field }}
+                                                                {% if field.errors %}
+                                                                    <div class="invalid-feedback d-block">
+                                                                        {% for error in field.errors %}
+                                                                            {{ error }}
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endwith %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar avec aide et actions -->
+            <div class="col-lg-4">
+                <!-- Actions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tools me-2 text-primary"></i>Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if medecin.pk %}Enregistrer les modifications{% else %}Créer le médecin{% endif %}
+                            </button>
+                            
+                            <a href="{% url 'gestion_rdv:medecins_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                            
+                            {% if medecin.pk %}
+                                <a href="{% url 'gestion_rdv:medecin_detail' medecin.pk %}" class="btn btn-outline-info">
+                                    <i class="fas fa-eye me-2"></i>Voir le profil
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aide -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-question-circle me-2 text-info"></i>Aide
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <div class="mb-3">
+                                <strong>Nom d'utilisateur :</strong><br>
+                                Utilisé pour la connexion au système. Doit être unique.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Nom complet :</strong><br>
+                                Nom affiché dans l'interface. Incluez le titre "Dr."
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Spécialité :</strong><br>
+                                Spécialité médicale principale du médecin.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Horaires :</strong><br>
+                                Format 24h (ex: 08:00). Laissez vide si le médecin ne consulte pas ce jour-là.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations importantes -->
+                <div class="card border-warning border-0 shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Important
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            {% if not medecin.pk %}
+                                <p class="mb-2">
+                                    <strong>Nouveau médecin :</strong><br>
+                                    Un compte utilisateur sera créé automatiquement avec le rôle "Médecin".
+                                </p>
+                            {% endif %}
+                            
+                            <p class="mb-2">
+                                <strong>Sécurité :</strong><br>
+                                Le médecin pourra se connecter et consulter uniquement son propre planning.
+                            </p>
+                            
+                            <p class="mb-0">
+                                <strong>Modification :</strong><br>
+                                Les horaires peuvent être modifiés à tout moment sans affecter les RDV existants.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.invalid-feedback {
+    display: block !important;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.card-header h6 {
+    font-weight: 600;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.border-light {
+    border-color: #e9ecef !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation d'apparition
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Validation des horaires
+    const horaireInputs = document.querySelectorAll('input[type="time"]');
+    horaireInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const row = this.closest('.row');
+            const debutInput = row.querySelector('input[name$="_debut"]');
+            const finInput = row.querySelector('input[name$="_fin"]');
+            
+            if (debutInput.value && finInput.value) {
+                if (debutInput.value >= finInput.value) {
+                    finInput.setCustomValidity('L\'heure de fin doit être après l\'heure de début');
+                    finInput.classList.add('is-invalid');
+                } else {
+                    finInput.setCustomValidity('');
+                    finInput.classList.remove('is-invalid');
+                }
+            }
+        });
+    });
+
+    // Auto-complétion du nom d'utilisateur basé sur le nom complet
+    const nomCompletInput = document.querySelector('input[name="nom_complet"]');
+    const usernameInput = document.querySelector('input[name="username"]');
+    
+    if (nomCompletInput && usernameInput && !usernameInput.value) {
+        nomCompletInput.addEventListener('input', function() {
+            const nomComplet = this.value.toLowerCase()
+                .replace(/dr\.?\s*/i, '')
+                .replace(/\s+/g, '.')
+                .replace(/[^a-z.]/g, '');
+            
+            if (nomComplet) {
+                usernameInput.value = nomComplet;
+            }
+        });
+    }
+
+    // Confirmation avant de quitter si des modifications ont été faites
+    let formModified = false;
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    
+    formInputs.forEach(input => {
+        const initialValue = input.value;
+        input.addEventListener('input', function() {
+            if (this.value !== initialValue) {
+                formModified = true;
+            }
+        });
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (formModified) {
+            e.preventDefault();
+            e.returnValue = 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?';
+        }
+    });
+
+    // Réinitialiser le flag lors de la soumission
+    document.querySelector('form').addEventListener('submit', function() {
+        formModified = false;
+    });
+});
+</script>
+{% endblock %}

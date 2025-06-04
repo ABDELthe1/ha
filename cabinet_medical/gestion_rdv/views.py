@@ -208,12 +208,14 @@ def recherche_globale(request):
         'query': form.cleaned_data.get('query', '') if form.is_valid() else ''
     }
     
-    return render(request, 'gestion_rdv/recherche.html', context)Profil médecin non trouvé.")
-            return redirect('login')
+    return render(request, 'gestion_rdv/recherche.html', context)
     
-    else:
-        messages.error(request, "Accès non autorisé.")
-        return redirect('login')
+    # Profil médecin non trouvé.
+    # return redirect('login')
+    
+    # else:
+    #     messages.error(request, "Accès non autorisé.")
+    #     return redirect('login')
 
 
 # ==================== GESTION DES PATIENTS ====================

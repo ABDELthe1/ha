@@ -1,0 +1,572 @@
+{% extends 'gestion_rdv/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if patient.pk %}
+        Modifier {{ patient.nom }} {{ patient.prenom }} - Cabinet Médical
+    {% else %}
+        Nouveau Patient - Cabinet Médical
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home me-1"></i>Accueil
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{% url 'gestion_rdv:patients_list' %}">
+                <i class="fas fa-users me-1"></i>Patients
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            {% if patient.pk %}
+                Modifier {{ patient.nom }} {{ patient.prenom }}
+            {% else %}
+                Nouveau patient
+            {% endif %}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-info text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-user me-2"></i>
+                                {% if patient.pk %}
+                                    Modifier le patient
+                                {% else %}
+                                    Nouveau patient
+                                {% endif %}
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                {% if patient.pk %}
+                                    Modification des informations de {{ patient.nom }} {{ patient.prenom }}
+                                {% else %}
+                                    Ajout d'un nouveau patient dans la base de données
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="h1 mb-0 opacity-75">
+                                <i class="fas fa-{% if patient.pk %}edit{% else %}user-plus{% endif %}"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" novalidate id="patient-form">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Formulaire principal -->
+            <div class="col-lg-8 mb-4">
+                <!-- Informations personnelles -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2 text-primary"></i>Informations personnelles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.nom.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-user me-1"></i>{{ form.nom.label }}
+                                    </label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.nom.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.prenom.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-user me-1"></i>{{ form.prenom.label }}
+                                    </label>
+                                    {{ form.prenom }}
+                                    {% if form.prenom.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.prenom.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_naissance.id_for_label }}" class="form-label">
+                                        <i class="fas fa-birthday-cake me-1"></i>{{ form.date_naissance.label }}
+                                    </label>
+                                    {{ form.date_naissance }}
+                                    {% if form.date_naissance.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.date_naissance.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Optionnel - pour calculer l'âge</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.telephone.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-phone me-1"></i>{{ form.telephone.label }}
+                                    </label>
+                                    {{ form.telephone }}
+                                    {% if form.telephone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.telephone.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Format: 0123456789 ou +33123456789</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations de contact -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-address-book me-2 text-success"></i>Informations de contact
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Optionnel - pour les confirmations de RDV</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.adresse.id_for_label }}" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ form.adresse.label }}
+                            </label>
+                            {{ form.adresse }}
+                            {% if form.adresse.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.adresse.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Adresse complète (rue, ville, code postal)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes administratives -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2 text-warning"></i>Notes administratives
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="{{ form.notes_administratives.id_for_label }}" class="form-label">
+                                <i class="fas fa-notes-medical me-1"></i>{{ form.notes_administratives.label }}
+                            </label>
+                            {{ form.notes_administratives }}
+                            {% if form.notes_administratives.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes_administratives.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Informations importantes : mutuelle, allergies, traitements en cours, 
+                                préférences de contact, etc.
+                            </div>
+                        </div>
+                        
+                        <!-- Suggestions de notes -->
+                        <div class="alert alert-light border">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-lightbulb me-1"></i>Suggestions de notes
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled mb-0 small">
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Mutuelle: ')">• Mutuelle</button></li>
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Allergies: ')">• Allergies</button></li>
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Traitements: ')">• Traitements</button></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled mb-0 small">
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Préfère être contacté par: ')">• Contact préféré</button></li>
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Antécédents: ')">• Antécédents</button></li>
+                                        <li><button type="button" class="btn btn-link btn-sm p-0" onclick="addNote('Remarques: ')">• Remarques</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar avec aide et actions -->
+            <div class="col-lg-4">
+                <!-- Actions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tools me-2 text-primary"></i>Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if patient.pk %}Enregistrer les modifications{% else %}Créer le patient{% endif %}
+                            </button>
+                            
+                            <a href="{% url 'gestion_rdv:patients_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                            
+                            {% if patient.pk %}
+                                <a href="{% url 'gestion_rdv:patient_detail' patient.pk %}" class="btn btn-outline-info">
+                                    <i class="fas fa-eye me-2"></i>Voir le profil
+                                </a>
+                                
+                                <a href="{% url 'gestion_rdv:rdv_create' %}?patient={{ patient.pk }}" class="btn btn-outline-success">
+                                    <i class="fas fa-plus me-2"></i>Nouveau RDV
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aide et conseils -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-question-circle me-2 text-info"></i>Aide
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <div class="mb-3">
+                                <strong>Champs obligatoires :</strong><br>
+                                Nom, prénom et téléphone sont requis pour créer un patient.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Téléphone :</strong><br>
+                                Utilisé pour les rappels de RDV. Accepte les formats nationaux et internationaux.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Date de naissance :</strong><br>
+                                Permet de calculer l'âge automatiquement et d'organiser les consultations par tranche d'âge.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Notes administratives :</strong><br>
+                                Informations importantes visibles par tout le personnel médical.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raccourcis téléphone -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-phone me-2 text-success"></i>Format téléphone
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <strong>Formats acceptés :</strong>
+                            <ul class="list-unstyled mt-2 mb-0">
+                                <li>• 0123456789</li>
+                                <li>• 01 23 45 67 89</li>
+                                <li>• +33123456789</li>
+                                <li>• +33 1 23 45 67 89</li>
+                            </ul>
+                        </div>
+                        <hr class="my-3">
+                        <div class="d-grid gap-1">
+                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                    onclick="formatPhone('01')">Fixe Paris</button>
+                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                    onclick="formatPhone('06')">Mobile</button>
+                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                    onclick="formatPhone('07')">Mobile</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation en temps réel -->
+                <div class="card border-info border-0 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>Validation
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <div id="validation-nom" class="mb-2">
+                                <i class="fas fa-circle text-muted me-1"></i>
+                                <span class="text-muted">Nom</span>
+                            </div>
+                            <div id="validation-prenom" class="mb-2">
+                                <i class="fas fa-circle text-muted me-1"></i>
+                                <span class="text-muted">Prénom</span>
+                            </div>
+                            <div id="validation-telephone" class="mb-2">
+                                <i class="fas fa-circle text-muted me-1"></i>
+                                <span class="text-muted">Téléphone</span>
+                            </div>
+                            <div id="validation-email">
+                                <i class="fas fa-circle text-muted me-1"></i>
+                                <span class="text-muted">Email (optionnel)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.form-control, .form-select, textarea {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus, textarea:focus {
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block !important;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.card-header h6, .card-header h5 {
+    font-weight: 600;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.btn-link {
+    text-decoration: none !important;
+}
+
+.btn-link:hover {
+    text-decoration: underline !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation d'apparition
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Validation en temps réel
+    const nomInput = document.querySelector('input[name="nom"]');
+    const prenomInput = document.querySelector('input[name="prenom"]');
+    const telephoneInput = document.querySelector('input[name="telephone"]');
+    const emailInput = document.querySelector('input[name="email"]');
+
+    if (nomInput) {
+        nomInput.addEventListener('input', function() {
+            validateField('nom', this.value.trim().length >= 2, 'Nom (minimum 2 caractères)');
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    if (prenomInput) {
+        prenomInput.addEventListener('input', function() {
+            validateField('prenom', this.value.trim().length >= 2, 'Prénom (minimum 2 caractères)');
+            this.value = capitalizeWords(this.value);
+        });
+    }
+
+    if (telephoneInput) {
+        telephoneInput.addEventListener('input', function() {
+            const phoneRegex = /^(\+33|0)[1-9](\d{8})$/;
+            const cleanPhone = this.value.replace(/\s/g, '');
+            validateField('telephone', phoneRegex.test(cleanPhone), 'Téléphone (format valide)');
+        });
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = this.value === '' || emailRegex.test(this.value);
+            validateField('email', isValid, 'Email (format valide ou vide)');
+        });
+    }
+
+    // Confirmation avant de quitter si des modifications ont été faites
+    let formModified = false;
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    
+    formInputs.forEach(input => {
+        const initialValue = input.value;
+        input.addEventListener('input', function() {
+            if (this.value !== initialValue) {
+                formModified = true;
+            }
+        });
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (formModified) {
+            e.preventDefault();
+            e.returnValue = 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?';
+        }
+    });
+
+    // Réinitialiser le flag lors de la soumission
+    document.querySelector('#patient-form').addEventListener('submit', function() {
+        formModified = false;
+    });
+});
+
+// Fonction de validation des champs
+function validateField(fieldName, isValid, label) {
+    const validationElement = document.querySelector(`#validation-${fieldName}`);
+    const icon = validationElement.querySelector('i');
+    const text = validationElement.querySelector('span');
+    
+    if (isValid) {
+        icon.className = 'fas fa-check-circle text-success me-1';
+        text.className = 'text-success';
+        text.textContent = label + ' ✓';
+    } else {
+        icon.className = 'fas fa-times-circle text-danger me-1';
+        text.className = 'text-danger';
+        text.textContent = label + ' ✗';
+    }
+}
+
+// Fonction pour capitaliser les mots
+function capitalizeWords(str) {
+    return str.replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
+// Fonction pour ajouter des notes prédéfinies
+function addNote(noteText) {
+    const notesTextarea = document.querySelector('textarea[name="notes_administratives"]');
+    if (notesTextarea) {
+        const currentValue = notesTextarea.value;
+        const newValue = currentValue ? currentValue + '\n' + noteText : noteText;
+        notesTextarea.value = newValue;
+        notesTextarea.focus();
+        notesTextarea.setSelectionRange(newValue.length, newValue.length);
+    }
+}
+
+// Fonction pour formater le téléphone
+function formatPhone(prefix) {
+    const phoneInput = document.querySelector('input[name="telephone"]');
+    if (phoneInput && !phoneInput.value) {
+        phoneInput.value = prefix;
+        phoneInput.focus();
+        phoneInput.setSelectionRange(2, 2);
+    }
+}
+</script>
+{% endblock %}

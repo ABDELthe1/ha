@@ -1,0 +1,550 @@
+{% extends 'gestion_rdv/base.html' %}
+{% load static %}
+
+{% block title %}Liste des Médecins - Cabinet Médical{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dashboard' %}">
+                <i class="fas fa-home me-1"></i>Accueil
+            </a>
+        </li>
+        <li class="breadcrumb-item active">
+            <i class="fas fa-user-md me-1"></i>Médecins
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-success text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-user-md me-2"></i>
+                                Gestion des Médecins
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Liste complète des médecins du cabinet - {{ medecins|length }} médecin{{ medecins|length|pluralize }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'gestion_rdv:medecin_create' %}" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i>Nouveau médecin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">
+                                <i class="fas fa-search me-1"></i>Recherche
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search" 
+                                   name="search" 
+                                   value="{{ search_query }}"
+                                   placeholder="Nom, spécialité, téléphone...">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="statut" class="form-label">
+                                <i class="fas fa-filter me-1"></i>Statut
+                            </label>
+                            <select class="form-select" id="statut" name="statut">
+                                <option value="">Tous les statuts</option>
+                                <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs</option>
+                                <option value="inactif" {% if statut_filter == 'inactif' %}selected{% endif %}>Inactifs</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="specialite" class="form-label">
+                                <i class="fas fa-stethoscope me-1"></i>Spécialité
+                            </label>
+                            <select class="form-select" id="specialite" name="specialite">
+                                <option value="">Toutes les spécialités</option>
+                                {% for specialite in specialites %}
+                                    <option value="{{ specialite }}" {% if specialite_filter == specialite %}selected{% endif %}>
+                                        {{ specialite }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'gestion_rdv:medecins_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold text-success">{{ stats.actifs }}</h4>
+                    <p class="text-muted mb-0">Médecins actifs</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-heartbeat fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold text-info">{{ stats.specialites }}</h4>
+                    <p class="text-muted mb-0">Spécialités</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-calendar-day fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold text-warning">{{ stats.rdv_aujourdhui }}</h4>
+                    <p class="text-muted mb-0">RDV aujourd'hui</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-calendar-week fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold text-primary">{{ stats.rdv_semaine }}</h4>
+                    <p class="text-muted mb-0">RDV cette semaine</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des médecins -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2 text-success"></i>
+                        Liste des médecins
+                        {% if search_query or statut_filter or specialite_filter %}
+                            <small class="text-muted">(résultats filtrés)</small>
+                        {% endif %}
+                    </h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle btn-sm" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf me-1 text-danger"></i>Export PDF
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel me-1 text-success"></i>Export Excel
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if medecins %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">
+                                            <i class="fas fa-user me-1"></i>Médecin
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-stethoscope me-1"></i>Spécialité
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-phone me-1"></i>Contact
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-calendar me-1"></i>Prochains RDV
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-clock me-1"></i>Statut
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-cogs me-1"></i>Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for medecin in medecins %}
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar me-3">
+                                                    <div class="avatar-circle bg-success text-white">
+                                                        {{ medecin.utilisateur.nom_complet|first|upper }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">
+                                                        <a href="{% url 'gestion_rdv:medecin_detail' medecin.pk %}" 
+                                                           class="text-decoration-none">
+                                                            Dr. {{ medecin.utilisateur.nom_complet }}
+                                                        </a>
+                                                    </div>
+                                                    <small class="text-muted">@{{ medecin.utilisateur.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info fs-6">{{ medecin.specialite }}</span>
+                                        </td>
+                                        <td>
+                                            {% if medecin.telephone_professionnel %}
+                                                <div>
+                                                    <i class="fas fa-phone me-1 text-success"></i>
+                                                    <a href="tel:{{ medecin.telephone_professionnel }}" 
+                                                       class="text-decoration-none">
+                                                        {{ medecin.telephone_professionnel }}
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Non renseigné</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-warning me-2">{{ medecin.nb_rdv_futurs }}</span>
+                                                <small class="text-muted">à venir</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if medecin.utilisateur.actif %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Actif
+                                                </span>
+                                                <div class="small text-muted mt-1">
+                                                    Dernière connexion: {{ medecin.utilisateur.last_login|date:"d/m/Y"|default:"Jamais" }}
+                                                </div>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Inactif
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'gestion_rdv:medecin_detail' medecin.pk %}" 
+                                                   class="btn btn-outline-primary" title="Voir détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'gestion_rdv:planning_medecin' medecin.pk %}" 
+                                                   class="btn btn-outline-info" title="Planning">
+                                                    <i class="fas fa-calendar"></i>
+                                                </a>
+                                                <a href="{% url 'gestion_rdv:medecin_update' medecin.pk %}" 
+                                                   class="btn btn-outline-warning" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" 
+                                                            data-bs-toggle="dropdown" title="Plus d'actions">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'gestion_rdv:rdv_create' %}?medecin={{ medecin.pk }}">
+                                                                <i class="fas fa-plus me-1 text-success"></i>Nouveau RDV
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'gestion_rdv:rdv_list' %}?medecin={{ medecin.pk }}">
+                                                                <i class="fas fa-list me-1 text-info"></i>Voir ses RDV
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'gestion_rdv:export_planning_medecin' medecin.pk %}">
+                                                                <i class="fas fa-file-pdf me-1 text-danger"></i>Export PDF
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item text-warning" 
+                                                               href="{% url 'gestion_rdv:medecin_update' medecin.pk %}">
+                                                                <i class="fas fa-edit me-1"></i>Modifier
+                                                            </a>
+                                                        </li>
+                                                        {% if not medecin.utilisateur.actif %}
+                                                            <li>
+                                                                <button class="dropdown-item text-success" 
+                                                                        onclick="toggleMedecinStatus({{ medecin.pk }}, true)">
+                                                                    <i class="fas fa-check me-1"></i>Réactiver
+                                                                </button>
+                                                            </li>
+                                                        {% else %}
+                                                            <li>
+                                                                <button class="dropdown-item text-danger" 
+                                                                        onclick="toggleMedecinStatus({{ medecin.pk }}, false)">
+                                                                    <i class="fas fa-ban me-1"></i>Désactiver
+                                                                </button>
+                                                            </li>
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun médecin trouvé</h5>
+                            {% if search_query or statut_filter or specialite_filter %}
+                                <p class="text-muted mb-3">
+                                    Aucun médecin ne correspond aux critères de recherche.
+                                </p>
+                                <a href="{% url 'gestion_rdv:medecins_list' %}" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-times me-1"></i>Effacer les filtres
+                                </a>
+                            {% else %}
+                                <p class="text-muted mb-3">
+                                    Commencez par ajouter des médecins au cabinet.
+                                </p>
+                            {% endif %}
+                            <a href="{% url 'gestion_rdv:medecin_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Ajouter un médecin
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if medecins.has_other_pages %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Navigation des pages">
+                    <ul class="pagination justify-content-center">
+                        {% if medecins.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}{% if specialite_filter %}&specialite={{ specialite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ medecins.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}{% if specialite_filter %}&specialite={{ specialite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in medecins.paginator.page_range %}
+                            {% if medecins.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}{% if specialite_filter %}&specialite={{ specialite_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if medecins.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ medecins.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}{% if specialite_filter %}&specialite={{ specialite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ medecins.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}{% if specialite_filter %}&specialite={{ specialite_filter }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.badge.fs-6 {
+    font-size: 0.9rem !important;
+}
+
+.dropdown-toggle-split {
+    border-left: 1px solid rgba(0,0,0,.1);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border: none;
+    color: #667eea;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation des cartes
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+
+    // Tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Fonction pour basculer le statut d'un médecin
+function toggleMedecinStatus(medecinId, newStatus) {
+    const action = newStatus ? 'réactiver' : 'désactiver';
+    
+    if (confirm(`Êtes-vous sûr de vouloir ${action} ce médecin ?`)) {
+        // Ici vous pouvez ajouter un appel AJAX pour changer le statut
+        fetch(`/medecins/${medecinId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 'actif': newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de la modification du statut');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la modification du statut');
+        });
+    }
+}
+
+// Fonctions d'export
+function exportToPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'pdf');
+    window.open(window.location.pathname + '?' + params.toString(), '_blank');
+}
+
+function exportToExcel() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'excel');
+    window.location.href = window.location.pathname + '?' + params.toString();
+}
+
+// Auto-soumission du formulaire de recherche avec délai
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+</script>
+{% endblock %}
