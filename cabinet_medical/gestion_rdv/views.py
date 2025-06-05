@@ -355,6 +355,8 @@ class MedecinCreateView(SecretaireRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['jours_semaine'] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+
         if self.request.POST:
             context['user_form'] = MedecinUserForm(self.request.POST)
         else:
@@ -800,7 +802,6 @@ def export_planning_pdf(request):
     doc.build(story)
     return response
 
-
 @login_required
 def export_planning_medecin_pdf(request, medecin_id):
     """Export du planning d'un médecin en PDF"""
@@ -815,6 +816,74 @@ def export_planning_medecin_pdf(request, medecin_id):
         except Medecin.DoesNotExist:
             messages.error(request, "Profil médecin non trouvé.")
             return redirect('gestion_rdv:planning_medecin', medecin_id=medecin_id)
+    
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="planning_dr_{medecin.utilisateur.nom_complet.replace(" ", "_")}.pdf"'
     
+    # Dates
+    date_debut = request.GET.get('date_debut')
+    if date_debut:
+        date_debut = datetime.strptime(date_debut, '%Y-%m-%d').date()
+    else:
+        date_debut = date.today()
+    
+    date_fin = date_debut + timedelta(days=6)
+    
+    # Créer le PDF
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Titre
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1  # Centré
+    )
+    
+    story.append(Paragraph(f"Planning - Dr. {medecin.utilisateur.nom_complet}", title_style))
+    story.append(Paragraph(f"Spécialité: {medecin.specialite}", styles['Normal']))
+    story.append(Paragraph(f"Du {date_debut.strftime('%d/%m/%Y')} au {date_fin.strftime('%d/%m/%Y')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Récupérer les données
+    rdv_queryset = RendezVous.objects.filter(
+        medecin=medecin,
+        date_heure_debut__date__range=[date_debut, date_fin],
+        statut_rdv__in=['PLANIFIE', 'CONFIRME']
+    ).select_related('patient').order_by('date_heure_debut')
+    
+    # Créer le tableau
+    data = [['Date', 'Heure', 'Patient', 'Type', 'Durée', 'Notes']]
+    
+    for rdv in rdv_queryset:
+        notes = rdv.notes_rdv[:30] + '...' if rdv.notes_rdv and len(rdv.notes_rdv) > 30 else rdv.notes_rdv or ''
+        data.append([
+            rdv.date_heure_debut.strftime('%d/%m/%Y'),
+            rdv.date_heure_debut.strftime('%H:%M'),
+            f"{rdv.patient.nom} {rdv.patient.prenom}",
+            rdv.get_type_consultation_display(),
+            f"{rdv.duree_minutes} min",
+            notes
+        ])
+    
+    if len(data) > 1:
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(table)
+    else:
+        story.append(Paragraph("Aucun rendez-vous trouvé pour cette période.", styles['Normal']))
+    
+    doc.build(story)
+    return response

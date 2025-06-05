@@ -19,7 +19,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
+            <a class="navbar-brand" href="{% url 'gestion_rdv:dashboard' %}">
                 <i class="fas fa-stethoscope me-2"></i>Cabinet Médical
             </a>
             
@@ -31,7 +31,7 @@
                 {% if user.is_authenticated %}
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">
+                            <a class="nav-link" href="{% url 'gestion_rdv:dashboard' %}">
                                 <i class="fas fa-home me-1"></i>Accueil
                             </a>
                         </li>
@@ -178,10 +178,12 @@
                     </p>
                 </div>
                 <div class="col-md-6 text-md-end">
+                    {% if user.is_authenticated %}
                     <p class="text-muted small mb-0">
                         <i class="fas fa-clock me-1"></i>
                         Dernière connexion : {{ user.last_login|date:"d/m/Y H:i" }}
                     </p>
+                    {% endif %}
                     <p class="text-muted small mb-0">
                         © {% now "Y" %} - Tous droits réservés
                     </p>

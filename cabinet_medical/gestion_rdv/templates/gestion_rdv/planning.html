@@ -1,391 +1,468 @@
-{% extends 'gestion_rdv/base.html' %}
-{% load static %}
-
-{% block title %}Planning Général - Cabinet Médical{% endblock %}
+{% extends 'gestion_rdv/base.html' %} {% load static %} {% block title %}
+Planning Général - Cabinet Médical
+{% endblock %}
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="{% url 'dashboard' %}">
-                <i class="fas fa-home me-1"></i>Accueil
-            </a>
-        </li>
-        <li class="breadcrumb-item active">
-            <i class="fas fa-calendar-alt me-1"></i>Planning Général
-        </li>
-    </ol>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{% url 'gestion_rdv:dashboard' %}">
+        <i class="fas fa-home me-1"></i>Accueil
+      </a>
+    </li>
+    <li class="breadcrumb-item active">
+      <i class="fas fa-calendar-alt me-1"></i>Planning Général
+    </li>
+  </ol>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-success text-white border-0 shadow">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h2 class="mb-2">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Planning Général du Cabinet
-                            </h2>
-                            <p class="mb-0 opacity-75">
-                                <i class="fas fa-calendar-week me-1"></i>
-                                Du {{ date_debut|date:"d/m/Y" }} au {{ date_fin|date:"d/m/Y" }}
-                                <span class="mx-2">•</span>
-                                <i class="fas fa-clock me-1"></i>
-                                {{ planning_data.values|length }} rendez-vous
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <div class="btn-group">
-                                <a href="{% url 'gestion_rdv:rdv_create' %}" class="btn btn-light">
-                                    <i class="fas fa-plus-circle me-2"></i>Nouveau RDV
-                                </a>
-                                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split" 
-                                        data-bs-toggle="dropdown">
-                                    <span class="visually-hidden">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'gestion_rdv:export_planning' %}?date_debut={{ date_debut|date:'Y-m-d' }}&date_fin={{ date_fin|date:'Y-m-d' }}">
-                                        <i class="fas fa-file-pdf me-1 text-danger"></i>Export PDF
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="printPlanning()">
-                                        <i class="fas fa-print me-1 text-primary"></i>Imprimer
-                                    </a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <!-- En-tête -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-gradient-success text-white border-0 shadow">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h2 class="mb-2">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Planning Général du Cabinet
+              </h2>
+              <p class="mb-0 opacity-75">
+                <i class="fas fa-calendar-week me-1"></i>
+                Du {{ date_debut|date:"d/m/Y" }} au {{ date_fin|date:"d/m/Y" }}
+                <span class="mx-2">•</span>
+                <i class="fas fa-clock me-1"></i>
+                {{ planning_data.values|length }} rendez-vous
+              </p>
             </div>
-        </div>
-    </div>
-
-    <!-- Filtres -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <form method="get" class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label for="date_debut" class="form-label">
-                                <i class="fas fa-calendar-day me-1"></i>Date de début
-                            </label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   id="date_debut" 
-                                   name="date_debut" 
-                                   value="{{ date_debut|date:'Y-m-d' }}">
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <label for="date_fin" class="form-label">
-                                <i class="fas fa-calendar-check me-1"></i>Date de fin
-                            </label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   id="date_fin" 
-                                   name="date_fin" 
-                                   value="{{ date_fin|date:'Y-m-d' }}">
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <label class="form-label">
-                                <i class="fas fa-user-md me-1"></i>Médecin
-                            </label>
-                            {{ form.medecin }}
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <div class="btn-group w-100">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-search me-1"></i>Filtrer
-                                </button>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
-                                            data-bs-toggle="dropdown">
-                                        <i class="fas fa-calendar-alt"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="?date_debut={% now 'Y-m-d' %}&date_fin={% now 'Y-m-d' %}">
-                                            <i class="fas fa-calendar-day me-1 text-primary"></i>Aujourd'hui
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="?date_debut={% now 'Y-m-d' %}&date_fin={% now 'Y-m-d'|add_days:6 %}">
-                                            <i class="fas fa-calendar-week me-1 text-success"></i>Cette semaine
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="?date_debut={% now 'Y-m-d'|add_days:7 %}&date_fin={% now 'Y-m-d'|add_days:13 %}">
-                                            <i class="fas fa-calendar-week me-1 text-info"></i>Semaine prochaine
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="?date_debut={% now 'Y-m-01' %}&date_fin={% now 'Y-m-d'|last_day_of_month %}">
-                                            <i class="fas fa-calendar me-1 text-warning"></i>Ce mois
-                                        </a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+            <div class="col-md-4 text-md-end">
+              <div class="btn-group">
+                <a
+                  href="{% url 'gestion_rdv:rdv_create' %}"
+                  class="btn btn-light"
+                >
+                  <i class="fas fa-plus-circle me-2"></i>Nouveau RDV
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-light dropdown-toggle dropdown-toggle-split"
+                  data-bs-toggle="dropdown"
+                >
+                  <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a
+                      class="dropdown-item"
+                      href="{% url 'gestion_rdv:export_planning' %}?date_debut={{ date_debut|date:'Y-m-d' }}&date_fin={{ date_fin|date:'Y-m-d' }}"
+                    >
+                      <i class="fas fa-file-pdf me-1 text-danger"></i>Export PDF
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="printPlanning()">
+                      <i class="fas fa-print me-1 text-primary"></i>Imprimer
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Navigation rapide -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="changeWeek(-1)">
-                                <i class="fas fa-chevron-left me-1"></i>Semaine précédente
-                            </button>
-                            <button class="btn btn-outline-secondary" onclick="goToToday()">
-                                <i class="fas fa-calendar-day me-1"></i>Aujourd'hui
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="changeWeek(1)">
-                                Semaine suivante<i class="fas fa-chevron-right ms-1"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-info" id="view-day" onclick="changeView('day')">
-                                <i class="fas fa-calendar-day"></i> Jour
-                            </button>
-                            <button class="btn btn-outline-info active" id="view-week" onclick="changeView('week')">
-                                <i class="fas fa-calendar-week"></i> Semaine
-                            </button>
-                            <button class="btn btn-outline-info" id="view-month" onclick="changeView('month')">
-                                <i class="fas fa-calendar"></i> Mois
-                            </button>
-                        </div>
-                        
-                        <div class="badge bg-info fs-6">
-                            <i class="fas fa-clock me-1"></i>
-                            Dernière mise à jour: {% now "H:i" %}
-                        </div>
-                    </div>
-                </div>
+  <!-- Filtres -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label for="date_debut" class="form-label">
+                <i class="fas fa-calendar-day me-1"></i>Date de début
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                id="date_debut"
+                name="date_debut"
+                value="{{ date_debut|date:'Y-m-d' }}"
+              />
             </div>
-        </div>
-    </div>
 
-    <!-- Planning principal -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm" id="planning-container">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar-week me-2 text-success"></i>
-                        Planning détaillé
-                        {% if form.cleaned_data.medecin %}
-                            - Dr. {{ form.cleaned_data.medecin.utilisateur.nom_complet }}
+            <div class="col-md-3">
+              <label for="date_fin" class="form-label">
+                <i class="fas fa-calendar-check me-1"></i>Date de fin
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                id="date_fin"
+                name="date_fin"
+                value="{{ date_fin|date:'Y-m-d' }}"
+              />
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">
+                <i class="fas fa-user-md me-1"></i>Médecin
+              </label>
+              {{ form.medecin }}
+            </div>
+
+            <div class="col-md-3">
+              <div class="btn-group w-100">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-search me-1"></i>Filtrer
+                </button>
+                <div class="btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-calendar-alt"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="?date_debut={% now 'Y-m-d' %}&date_fin={% now 'Y-m-d' %}"
+                      >
+                        <i class="fas fa-calendar-day me-1 text-primary"></i
+                        >Aujourd'hui
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="?date_debut={% now 'Y-m-d' %}&date_fin={% now 'Y-m-d'|add_days:6 %}"
+                      >
+                        <i class="fas fa-calendar-week me-1 text-success"></i
+                        >Cette semaine
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="?date_debut={% now 'Y-m-d'|add_days:7 %}&date_fin={% now 'Y-m-d'|add_days:13 %}"
+                      >
+                        <i class="fas fa-calendar-week me-1 text-info"></i
+                        >Semaine prochaine
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="?date_debut={% now 'Y-m-01' %}&date_fin={% now 'Y-m-d'|last_day_of_month %}"
+                      >
+                        <i class="fas fa-calendar me-1 text-warning"></i>Ce mois
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation rapide -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="changeWeek(-1)">
+                <i class="fas fa-chevron-left me-1"></i>Semaine précédente
+              </button>
+              <button class="btn btn-outline-secondary" onclick="goToToday()">
+                <i class="fas fa-calendar-day me-1"></i>Aujourd'hui
+              </button>
+              <button class="btn btn-outline-primary" onclick="changeWeek(1)">
+                Semaine suivante<i class="fas fa-chevron-right ms-1"></i>
+              </button>
+            </div>
+
+            <div class="btn-group btn-group-sm">
+              <button
+                class="btn btn-outline-info"
+                id="view-day"
+                onclick="changeView('day')"
+              >
+                <i class="fas fa-calendar-day"></i> Jour
+              </button>
+              <button
+                class="btn btn-outline-info active"
+                id="view-week"
+                onclick="changeView('week')"
+              >
+                <i class="fas fa-calendar-week"></i> Semaine
+              </button>
+              <button
+                class="btn btn-outline-info"
+                id="view-month"
+                onclick="changeView('month')"
+              >
+                <i class="fas fa-calendar"></i> Mois
+              </button>
+            </div>
+
+            <div class="badge bg-info fs-6">
+              <i class="fas fa-clock me-1"></i>
+              Dernière mise à jour: {% now "H:i" %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Planning principal -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm" id="planning-container">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-week me-2 text-success"></i>
+            Planning détaillé 
+            {% if form.cleaned_data.medecin %} 
+              - Dr. {{ form.cleaned_data.medecin.utilisateur.nom_complet }} 
+            {% endif %}
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <!-- Vue semaine (par défaut) -->
+          <div id="week-view">
+            {% if planning_data %}
+            <div class="table-responsive">
+              <table class="table table-bordered mb-0 planning-table">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 120px" class="text-center">Horaires</th>
+                    {% for date, rdv_jour in planning_data.items %}
+                    <th class="text-center">
+                      <div class="fw-bold">{{ date|date:"l"|capfirst }}</div>
+                      <div class="text-muted">{{ date|date:"d/m" }}</div>
+                      <small
+                        class="badge {% if date|date:'Y-m-d' == today|date:'Y-m-d' %}bg-primary {% elif rdv_jour %}bg-success {% else %}bg-light text-dark{% endif %}"
+                      >
+                        {{ rdv_jour|length }} RDV
+                      </small>
+                    </th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for heure in horaires_planning %}
+                  <tr>
+                    <td class="text-center fw-bold table-secondary">
+                      {{ heure }}:00
+                    </td>
+                    {% for date, rdv_jour in planning_data.items %}
+                    <td
+                      class="planning-cell position-relative"
+                      data-date="{{ date|date:'Y-m-d' }}"
+                      data-heure="{{ heure }}"
+                    >
+                      {% for rdv in rdv_jour %}
+                        {% if rdv.date_heure_debut.hour == heure %}
+                        <div
+                          class="rdv-block rdv-status-{{ rdv.statut_rdv|lower }}"
+                          onclick="showRDVDetails({{ rdv.pk }})"
+                        >
+                          <div class="rdv-time">
+                            {{ rdv.date_heure_debut|date:"H:i" }}
+                          </div>
+                          <div class="rdv-patient">
+                            {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
+                          </div>
+                          <div class="rdv-medecin">
+                            Dr. {{ rdv.medecin.utilisateur.nom_complet|truncatewords:2 }}
+                          </div>
+                          <div class="rdv-type">
+                            {{ rdv.get_type_consultation_display }}
+                          </div>
+                        </div>
                         {% endif %}
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Vue semaine (par défaut) -->
-                    <div id="week-view">
-                        {% if planning_data %}
-                            <div class="table-responsive">
-                                <table class="table table-bordered mb-0 planning-table">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="width: 120px;" class="text-center">Horaires</th>
-                                            {% for date, rdv_jour in planning_data.items %}
-                                                <th class="text-center">
-                                                    <div class="fw-bold">{{ date|date:"l"|capfirst }}</div>
-                                                    <div class="text-muted">{{ date|date:"d/m" }}</div>
-                                                    <small class="badge 
-                                                        {% if date|date:'Y-m-d' == today|date:'Y-m-d' %}bg-primary
-                                                        {% elif rdv_jour %}bg-success
-                                                        {% else %}bg-light text-dark{% endif %}">
-                                                        {{ rdv_jour|length }} RDV
-                                                    </small>
-                                                </th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for heure in horaires_planning %}
-                                            <tr>
-                                                <td class="text-center fw-bold table-secondary">
-                                                    {{ heure }}:00
-                                                </td>
-                                                {% for date, rdv_jour in planning_data.items %}
-                                                    <td class="planning-cell position-relative" 
-                                                        data-date="{{ date|date:'Y-m-d' }}" 
-                                                        data-heure="{{ heure }}">
-                                                        {% for rdv in rdv_jour %}
-                                                            {% if rdv.date_heure_debut.hour == heure %}
-                                                                <div class="rdv-block rdv-status-{{ rdv.statut_rdv|lower }}" 
-                                                                     onclick="showRDVDetails({{ rdv.pk }})">
-                                                                    <div class="rdv-time">{{ rdv.date_heure_debut|date:"H:i" }}</div>
-                                                                    <div class="rdv-patient">{{ rdv.patient.nom }} {{ rdv.patient.prenom }}</div>
-                                                                    <div class="rdv-medecin">Dr. {{ rdv.medecin.utilisateur.nom_complet|truncatewords:2 }}</div>
-                                                                    <div class="rdv-type">{{ rdv.get_type_consultation_display }}</div>
-                                                                </div>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                        <div class="planning-add-btn" onclick="createRDV('{{ date|date:'Y-m-d' }}', '{{ heure }}:00')">
-                                                            <i class="fas fa-plus"></i>
-                                                        </div>
-                                                    </td>
-                                                {% endfor %}
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Aucun rendez-vous planifié</h5>
-                                <p class="text-muted mb-3">
-                                    Aucun rendez-vous trouvé pour la période sélectionnée.
-                                </p>
-                                <a href="{% url 'gestion_rdv:rdv_create' %}" class="btn btn-success">
-                                    <i class="fas fa-plus me-1"></i>Planifier un rendez-vous
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Vue jour -->
-                    <div id="day-view" style="display: none;">
-                        <div class="p-3">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h6 class="mb-3">
-                                        <i class="fas fa-calendar-day me-1"></i>
-                                        Planning du {{ date_debut|date:"l d F Y"|capfirst }}
-                                    </h6>
-                                    <div id="day-schedule">
-                                        <!-- Contenu généré par JavaScript -->
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card border-light">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0">
-                                                <i class="fas fa-info-circle me-1"></i>Résumé de la journée
-                                            </h6>
-                                        </div>
-                                        <div class="card-body" id="day-summary">
-                                            <!-- Contenu généré par JavaScript -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vue mois -->
-                    <div id="month-view" style="display: none;">
-                        <div class="p-3">
-                            <div class="calendar-month" id="month-calendar">
-                                <!-- Contenu généré par JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                      {% endfor %}
+                      
+                      <div
+                        class="planning-add-btn"
+                        onclick="createRDV('{{ date|date:'Y-m-d' }}', '{{ heure }}:00')"
+                      >
+                        <i class="fas fa-plus"></i>
+                      </div>
+                    </td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-        </div>
-    </div>
-
-    <!-- Légende -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-3">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-2">
-                                <i class="fas fa-palette me-1"></i>Légende des statuts
-                            </h6>
-                            <div class="d-flex flex-wrap gap-3">
-                                <span class="badge bg-warning p-2">
-                                    <i class="fas fa-clock me-1"></i>Planifié
-                                </span>
-                                <span class="badge bg-success p-2">
-                                    <i class="fas fa-check me-1"></i>Confirmé
-                                </span>
-                                <span class="badge bg-primary p-2">
-                                    <i class="fas fa-check-circle me-1"></i>Terminé
-                                </span>
-                                <span class="badge bg-danger p-2">
-                                    <i class="fas fa-times me-1"></i>Annulé
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <small class="text-muted">
-                                <i class="fas fa-mouse-pointer me-1"></i>
-                                Cliquez sur un créneau vide pour ajouter un RDV<br>
-                                <i class="fas fa-eye me-1"></i>
-                                Cliquez sur un RDV pour voir les détails
-                            </small>
-                        </div>
-                    </div>
-                </div>
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">Aucun rendez-vous planifié</h5>
+              <p class="text-muted mb-3">
+                Aucun rendez-vous trouvé pour la période sélectionnée.
+              </p>
+              <a
+                href="{% url 'gestion_rdv:rdv_create' %}"
+                class="btn btn-success"
+              >
+                <i class="fas fa-plus me-1"></i>Planifier un rendez-vous
+              </a>
             </div>
+            {% endif %}
+          </div>
+
+          <!-- Vue jour -->
+          <div id="day-view" style="display: none">
+            <div class="p-3">
+              <div class="row">
+                <div class="col-md-8">
+                  <h6 class="mb-3">
+                    <i class="fas fa-calendar-day me-1"></i>
+                    Planning du {{ date_debut|date:"l d F Y"|capfirst }}
+                  </h6>
+                  <div id="day-schedule">
+                    <!-- Contenu généré par JavaScript -->
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card border-light">
+                    <div class="card-header bg-light">
+                      <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-1"></i>Résumé de la
+                        journée
+                      </h6>
+                    </div>
+                    <div class="card-body" id="day-summary">
+                      <!-- Contenu généré par JavaScript -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vue mois -->
+          <div id="month-view" style="display: none">
+            <div class="p-3">
+              <div class="calendar-month" id="month-calendar">
+                <!-- Contenu généré par JavaScript -->
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Légende -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h6 class="mb-2">
+                <i class="fas fa-palette me-1"></i>Légende des statuts
+              </h6>
+              <div class="d-flex flex-wrap gap-3">
+                <span class="badge bg-warning p-2">
+                  <i class="fas fa-clock me-1"></i>Planifié
+                </span>
+                <span class="badge bg-success p-2">
+                  <i class="fas fa-check me-1"></i>Confirmé
+                </span>
+                <span class="badge bg-primary p-2">
+                  <i class="fas fa-check-circle me-1"></i>Terminé
+                </span>
+                <span class="badge bg-danger p-2">
+                  <i class="fas fa-times me-1"></i>Annulé
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <small class="text-muted">
+                <i class="fas fa-mouse-pointer me-1"></i>
+                Cliquez sur un créneau vide pour ajouter un RDV<br />
+                <i class="fas fa-eye me-1"></i>
+                Cliquez sur un RDV pour voir les détails
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal pour les détails du RDV -->
 <div class="modal fade" id="rdvModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-calendar-alt me-2"></i>Détails du rendez-vous
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="rdv-details">
-                <!-- Contenu chargé dynamiquement -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Fermer
-                </button>
-                <a href="#" class="btn btn-warning" id="edit-rdv-btn">
-                    <i class="fas fa-edit me-1"></i>Modifier
-                </a>
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-calendar-alt me-2"></i>Détails du rendez-vous
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body" id="rdv-details">
+        <!-- Contenu chargé dynamiquement -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Fermer
+        </button>
+        <a href="#" class="btn btn-warning" id="edit-rdv-btn">
+          <i class="fas fa-edit me-1"></i>Modifier
+        </a>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.bg-gradient-success {
+  .bg-gradient-success {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
+  }
 
-.planning-table {
+  .planning-table {
     font-size: 0.9rem;
-}
+  }
 
-.planning-cell {
+  .planning-cell {
     height: 80px;
     min-width: 150px;
     vertical-align: top;
     padding: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
-}
+  }
 
-.planning-cell:hover {
+  .planning-cell:hover {
     background-color: #f8f9fa;
-}
+  }
 
-.rdv-block {
+  .rdv-block {
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     border: 1px solid #2196f3;
     border-radius: 6px;
@@ -395,57 +472,57 @@
     transition: all 0.2s;
     font-size: 0.8rem;
     position: relative;
-}
+  }
 
-.rdv-block:hover {
+  .rdv-block:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
 
-.rdv-status-planifie {
+  .rdv-status-planifie {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     border-color: #ffc107;
-}
+  }
 
-.rdv-status-confirme {
+  .rdv-status-confirme {
     background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
     border-color: #28a745;
-}
+  }
 
-.rdv-status-termine {
+  .rdv-status-termine {
     background: linear-gradient(135deg, #d1ecf1 0%, #b8daff 100%);
     border-color: #007bff;
-}
+  }
 
-.rdv-status-annule {
+  .rdv-status-annule {
     background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
     border-color: #dc3545;
     opacity: 0.7;
-}
+  }
 
-.rdv-time {
+  .rdv-time {
     font-weight: bold;
     color: #495057;
-}
+  }
 
-.rdv-patient {
+  .rdv-patient {
     font-weight: 600;
     margin: 2px 0;
     color: #212529;
-}
+  }
 
-.rdv-medecin {
+  .rdv-medecin {
     color: #6c757d;
     font-size: 0.75rem;
-}
+  }
 
-.rdv-type {
+  .rdv-type {
     color: #495057;
     font-size: 0.7rem;
     margin-top: 2px;
-}
+  }
 
-.planning-add-btn {
+  .planning-add-btn {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -460,50 +537,50 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-}
+  }
 
-.planning-cell:hover .planning-add-btn {
+  .planning-cell:hover .planning-add-btn {
     display: flex;
-}
+  }
 
-.planning-add-btn:hover {
+  .planning-add-btn:hover {
     background-color: #218838;
     transform: translate(-50%, -50%) scale(1.1);
-}
+  }
 
-.btn-group .btn.active {
+  .btn-group .btn.active {
     background-color: #17a2b8;
     border-color: #17a2b8;
     color: white;
-}
+  }
 
-.calendar-month {
+  .calendar-month {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
     background-color: #dee2e6;
-}
+  }
 
-.calendar-day {
+  .calendar-day {
     background-color: white;
     min-height: 100px;
     padding: 8px;
     border: 1px solid #dee2e6;
-}
+  }
 
-.calendar-day-header {
+  .calendar-day-header {
     font-weight: bold;
     text-align: center;
     background-color: #f8f9fa;
     padding: 10px;
-}
+  }
 
-.calendar-day-number {
+  .calendar-day-number {
     font-weight: bold;
     margin-bottom: 5px;
-}
+  }
 
-.calendar-rdv {
+  .calendar-rdv {
     background-color: #007bff;
     color: white;
     padding: 2px 4px;
@@ -511,111 +588,113 @@
     font-size: 0.7rem;
     margin-bottom: 2px;
     cursor: pointer;
-}
+  }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentView = 'week';
-let currentDate = new Date('{{ date_debut|date:"Y-m-d" }}');
+  let currentView = "week";
+  let currentDate = new Date('{{ date_debut|date:"Y-m-d" }}');
 
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // Animation des cartes
-    const cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll(".card");
     cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.5s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
+      card.style.opacity = "0";
+      card.style.transform = "translateY(20px)";
+
+      setTimeout(() => {
+        card.style.transition = "all 0.5s ease";
+        card.style.opacity = "1";
+        card.style.transform = "translateY(0)";
+      }, index * 100);
     });
 
     // Initialiser les tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll("[title]")
+    );
     tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+      return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
     // Auto-refresh du planning toutes les 5 minutes
-    setInterval(function() {
-        if (document.visibilityState === 'visible') {
-            location.reload();
-        }
+    setInterval(function () {
+      if (document.visibilityState === "visible") {
+        location.reload();
+      }
     }, 300000); // 5 minutes
-});
+  });
 
-// Fonctions de navigation
-function changeWeek(direction) {
-    const currentDateStr = document.getElementById('date_debut').value;
+  // Fonctions de navigation
+  function changeWeek(direction) {
+    const currentDateStr = document.getElementById("date_debut").value;
     const date = new Date(currentDateStr);
-    date.setDate(date.getDate() + (direction * 7));
-    
-    const dateDebut = date.toISOString().split('T')[0];
+    date.setDate(date.getDate() + direction * 7);
+
+    const dateDebut = date.toISOString().split("T")[0];
     const dateFin = new Date(date);
     dateFin.setDate(dateFin.getDate() + 6);
-    const dateFinStr = dateFin.toISOString().split('T')[0];
-    
-    const url = new URL(window.location);
-    url.searchParams.set('date_debut', dateDebut);
-    url.searchParams.set('date_fin', dateFinStr);
-    window.location.href = url.toString();
-}
+    const dateFinStr = dateFin.toISOString().split("T")[0];
 
-function goToToday() {
+    const url = new URL(window.location);
+    url.searchParams.set("date_debut", dateDebut);
+    url.searchParams.set("date_fin", dateFinStr);
+    window.location.href = url.toString();
+  }
+
+  function goToToday() {
     const today = new Date();
-    const dateDebut = today.toISOString().split('T')[0];
+    const dateDebut = today.toISOString().split("T")[0];
     const dateFin = new Date(today);
     dateFin.setDate(dateFin.getDate() + 6);
-    const dateFinStr = dateFin.toISOString().split('T')[0];
-    
+    const dateFinStr = dateFin.toISOString().split("T")[0];
+
     const url = new URL(window.location);
-    url.searchParams.set('date_debut', dateDebut);
-    url.searchParams.set('date_fin', dateFinStr);
+    url.searchParams.set("date_debut", dateDebut);
+    url.searchParams.set("date_fin", dateFinStr);
     window.location.href = url.toString();
-}
+  }
 
-// Fonctions de vue
-function changeView(view) {
+  // Fonctions de vue
+  function changeView(view) {
     // Mettre à jour les boutons
-    document.querySelectorAll('[id^="view-"]').forEach(btn => {
-        btn.classList.remove('active');
+    document.querySelectorAll('[id^="view-"]').forEach((btn) => {
+      btn.classList.remove("active");
     });
-    document.getElementById(`view-${view}`).classList.add('active');
-    
-    // Masquer toutes les vues
-    document.getElementById('week-view').style.display = 'none';
-    document.getElementById('day-view').style.display = 'none';
-    document.getElementById('month-view').style.display = 'none';
-    
-    // Afficher la vue sélectionnée
-    document.getElementById(`${view}-view`).style.display = 'block';
-    
-    currentView = view;
-    
-    // Charger le contenu spécifique à la vue
-    if (view === 'day') {
-        loadDayView();
-    } else if (view === 'month') {
-        loadMonthView();
-    }
-}
+    document.getElementById(`view-${view}`).classList.add("active");
 
-function loadDayView() {
+    // Masquer toutes les vues
+    document.getElementById("week-view").style.display = "none";
+    document.getElementById("day-view").style.display = "none";
+    document.getElementById("month-view").style.display = "none";
+
+    // Afficher la vue sélectionnée
+    document.getElementById(`${view}-view`).style.display = "block";
+
+    currentView = view;
+
+    // Charger le contenu spécifique à la vue
+    if (view === "day") {
+      loadDayView();
+    } else if (view === "month") {
+      loadMonthView();
+    }
+  }
+
+  function loadDayView() {
     // Simuler le chargement de la vue jour
-    const daySchedule = document.getElementById('day-schedule');
-    const daySummary = document.getElementById('day-summary');
-    
+    const daySchedule = document.getElementById("day-schedule");
+    const daySummary = document.getElementById("day-summary");
+
     daySchedule.innerHTML = `
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
             Vue détaillée de la journée en cours de développement.
         </div>
     `;
-    
+
     daySummary.innerHTML = `
         <div class="mb-2">
             <strong>Total RDV:</strong> <span class="badge bg-primary">8</span>
@@ -627,81 +706,83 @@ function loadDayView() {
             <strong>En attente:</strong> <span class="badge bg-warning">2</span>
         </div>
     `;
-}
+  }
 
-function loadMonthView() {
+  function loadMonthView() {
     // Simuler le chargement de la vue mois
-    const monthCalendar = document.getElementById('month-calendar');
-    
+    const monthCalendar = document.getElementById("month-calendar");
+
     monthCalendar.innerHTML = `
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
             Vue calendrier mensuel en cours de développement.
         </div>
     `;
-}
+  }
 
-// Fonctions d'interaction
-function showRDVDetails(rdvId) {
+  // Fonctions d'interaction
+  function showRDVDetails(rdvId) {
     // Charger les détails du RDV via AJAX
     fetch(`/rendez-vous/${rdvId}/`)
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('rdv-details').innerHTML = html;
-            document.getElementById('edit-rdv-btn').href = `/rendez-vous/${rdvId}/modifier/`;
-            new bootstrap.Modal(document.getElementById('rdvModal')).show();
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            alert('Erreur lors du chargement des détails du rendez-vous');
-        });
-}
+      .then((response) => response.text())
+      .then((html) => {
+        document.getElementById("rdv-details").innerHTML = html;
+        document.getElementById(
+          "edit-rdv-btn"
+        ).href = `/rendez-vous/${rdvId}/modifier/`;
+        new bootstrap.Modal(document.getElementById("rdvModal")).show();
+      })
+      .catch((error) => {
+        console.error("Erreur:", error);
+        alert("Erreur lors du chargement des détails du rendez-vous");
+      });
+  }
 
-function createRDV(date, heure) {
+  function createRDV(date, heure) {
     const datetime = `${date}T${heure}`;
     const url = `{% url 'gestion_rdv:rdv_create' %}?date_heure_debut=${datetime}`;
     window.location.href = url;
-}
+  }
 
-function printPlanning() {
+  function printPlanning() {
     window.print();
-}
+  }
 
-// Validation des dates
-document.getElementById('date_debut').addEventListener('change', function() {
+  // Validation des dates
+  document.getElementById("date_debut").addEventListener("change", function () {
     const dateDebut = new Date(this.value);
-    const dateFin = document.getElementById('date_fin');
+    const dateFin = document.getElementById("date_fin");
     const dateFinValue = new Date(dateFin.value);
-    
-    if (dateFinValue < dateDebut) {
-        const newDateFin = new Date(dateDebut);
-        newDateFin.setDate(newDateFin.getDate() + 6);
-        dateFin.value = newDateFin.toISOString().split('T')[0];
-    }
-});
 
-// Raccourcis clavier
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
-            case 'ArrowLeft':
-                e.preventDefault();
-                changeWeek(-1);
-                break;
-            case 'ArrowRight':
-                e.preventDefault();
-                changeWeek(1);
-                break;
-            case 'h':
-                e.preventDefault();
-                goToToday();
-                break;
-            case 'n':
-                e.preventDefault();
-                window.location.href = '{% url "gestion_rdv:rdv_create" %}';
-                break;
-        }
+    if (dateFinValue < dateDebut) {
+      const newDateFin = new Date(dateDebut);
+      newDateFin.setDate(newDateFin.getDate() + 6);
+      dateFin.value = newDateFin.toISOString().split("T")[0];
     }
-});
+  });
+
+  // Raccourcis clavier
+  document.addEventListener("keydown", function (e) {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          changeWeek(-1);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          changeWeek(1);
+          break;
+        case "h":
+          e.preventDefault();
+          goToToday();
+          break;
+        case "n":
+          e.preventDefault();
+          window.location.href = '{% url "gestion_rdv:rdv_create" %}';
+          break;
+      }
+    }
+  });
 </script>
 {% endblock %}

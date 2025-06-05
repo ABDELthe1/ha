@@ -1,404 +1,469 @@
-{% extends 'gestion_rdv/base.html' %}
-{% load static %}
-
-{% block title %}Dr. {{ medecin.utilisateur.nom_complet }} - Cabinet Médical{% endblock %}
-
-{% block breadcrumb %}
+{% extends 'gestion_rdv/base.html' %} {% load static %} {% block title %}Dr. {{
+medecin.utilisateur.nom_complet }} - Cabinet Médical{% endblock %} {% block
+breadcrumb %}
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="{% url 'dashboard' %}">
-                <i class="fas fa-home me-1"></i>Accueil
-            </a>
-        </li>
-        <li class="breadcrumb-item">
-            <a href="{% url 'gestion_rdv:medecins_list' %}">
-                <i class="fas fa-user-md me-1"></i>Médecins
-            </a>
-        </li>
-        <li class="breadcrumb-item active">
-            Dr. {{ medecin.utilisateur.nom_complet }}
-        </li>
-    </ol>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{% url 'gestion_rdv:dashboard' %}">
+        <i class="fas fa-home me-1"></i>Accueil
+      </a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'gestion_rdv:medecins_list' %}">
+        <i class="fas fa-user-md me-1"></i>Médecins
+      </a>
+    </li>
+    <li class="breadcrumb-item active">
+      Dr. {{ medecin.utilisateur.nom_complet }}
+    </li>
+  </ol>
 </nav>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="container-fluid">
-    <!-- En-tête avec informations principales -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-info text-white border-0 shadow">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h2 class="mb-2">
-                                <i class="fas fa-user-md me-2"></i>
-                                Dr. {{ medecin.utilisateur.nom_complet }}
-                            </h2>
-                            <p class="mb-1 opacity-75">
-                                <i class="fas fa-stethoscope me-1"></i>
-                                {{ medecin.specialite }}
-                            </p>
-                            <p class="mb-0 opacity-75">
-                                <i class="fas fa-circle me-1 
-                                {% if medecin.utilisateur.actif %}text-success{% else %}text-danger{% endif %}"></i>
-                                {% if medecin.utilisateur.actif %}Médecin actif{% else %}Médecin inactif{% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <div class="h1 mb-0 opacity-75">
-                                <i class="fas fa-id-card"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <!-- En-tête avec informations principales -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-gradient-info text-white border-0 shadow">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h2 class="mb-2">
+                <i class="fas fa-user-md me-2"></i>
+                Dr. {{ medecin.utilisateur.nom_complet }}
+              </h2>
+              <p class="mb-1 opacity-75">
+                <i class="fas fa-stethoscope me-1"></i>
+                {{ medecin.specialite }}
+              </p>
+              <p class="mb-0 opacity-75">
+                <i
+                  class="fas fa-circle me-1 {% if medecin.utilisateur.actif %}text-success{% else %}text-danger{% endif %}"
+                ></i>
+                {% if medecin.utilisateur.actif %}Médecin actif{% else %}Médecin
+                inactif{% endif %}
+              </p>
             </div>
+            <div class="col-md-4 text-md-end">
+              <div class="h1 mb-0 opacity-75">
+                <i class="fas fa-id-card"></i>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Informations détaillées -->
+    <div class="col-lg-8 mb-4">
+      <div class="card border-0 shadow-sm">
+        <div
+          class="card-header bg-light d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2 text-info"></i>Informations
+            détaillées
+          </h5>
+          {% if user.role == 'SECRETAIRE' %}
+          <div class="btn-group">
+            <a
+              href="{% url 'gestion_rdv:medecin_update' medecin.pk %}"
+              class="btn btn-outline-warning btn-sm"
+            >
+              <i class="fas fa-edit me-1"></i>Modifier
+            </a>
+            <a
+              href="{% url 'gestion_rdv:planning_medecin' medecin.pk %}"
+              class="btn btn-outline-primary btn-sm"
+            >
+              <i class="fas fa-calendar me-1"></i>Planning
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted">Nom complet</label>
+                <p class="form-control-plaintext">
+                  Dr. {{ medecin.utilisateur.nom_complet }}
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted"
+                  >Spécialité médicale</label
+                >
+                <p class="form-control-plaintext">
+                  <span class="badge bg-info fs-6"
+                    >{{ medecin.specialite }}</span
+                  >
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted"
+                  >Nom d'utilisateur</label
+                >
+                <p class="form-control-plaintext">
+                  {{ medecin.utilisateur.username }}
+                </p>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted"
+                  >Téléphone professionnel</label
+                >
+                <p class="form-control-plaintext">
+                  {% if medecin.telephone_professionnel %}
+                  <i class="fas fa-phone me-1 text-success"></i>
+                  <a
+                    href="tel:{{ medecin.telephone_professionnel }}"
+                    class="text-decoration-none"
+                  >
+                    {{ medecin.telephone_professionnel }}
+                  </a>
+                  {% else %}
+                  <span class="text-muted">Non renseigné</span>
+                  {% endif %}
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted"
+                  >Statut du compte</label
+                >
+                <p class="form-control-plaintext">
+                  {% if medecin.utilisateur.actif %}
+                  <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>Actif
+                  </span>
+                  {% else %}
+                  <span class="badge bg-danger">
+                    <i class="fas fa-times-circle me-1"></i>Inactif
+                  </span>
+                  {% endif %}
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold text-muted"
+                  >Compte créé le</label
+                >
+                <p class="form-control-plaintext">
+                  <i class="fas fa-calendar-plus me-1 text-muted"></i>
+                  {{ medecin.utilisateur.date_creation_compte|date:"d/m/Y à H:i"
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Horaires de disponibilité -->
+          {% if medecin.get_horaires %}
+          <hr class="my-4" />
+          <div class="mb-3">
+            <label class="form-label fw-bold text-muted">
+              <i class="fas fa-clock me-1"></i>Horaires de consultation
+            </label>
+            <div class="row mt-3">
+              {% for jour, horaire in medecin.get_horaires.items %}
+              <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card border-light">
+                  <div class="card-body text-center py-3">
+                    <h6 class="card-title text-capitalize mb-1">{{ jour }}</h6>
+                    <p class="card-text text-muted mb-0">
+                      <i class="fas fa-clock me-1"></i>
+                      {{ horaire.debut }} - {{ horaire.fin }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+          <hr class="my-4" />
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Horaires non configurés</strong><br />
+            Les horaires de consultation de ce médecin n'ont pas encore été
+            définis.
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <div class="row">
-        <!-- Informations détaillées -->
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2 text-info"></i>Informations détaillées
-                    </h5>
-                    {% if user.role == 'SECRETAIRE' %}
-                        <div class="btn-group">
-                            <a href="{% url 'gestion_rdv:medecin_update' medecin.pk %}" 
-                               class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-edit me-1"></i>Modifier
-                            </a>
-                            <a href="{% url 'gestion_rdv:planning_medecin' medecin.pk %}" 
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-calendar me-1"></i>Planning
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Nom complet</label>
-                                <p class="form-control-plaintext">Dr. {{ medecin.utilisateur.nom_complet }}</p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Spécialité médicale</label>
-                                <p class="form-control-plaintext">
-                                    <span class="badge bg-info fs-6">{{ medecin.specialite }}</span>
-                                </p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Nom d'utilisateur</label>
-                                <p class="form-control-plaintext">{{ medecin.utilisateur.username }}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Téléphone professionnel</label>
-                                <p class="form-control-plaintext">
-                                    {% if medecin.telephone_professionnel %}
-                                        <i class="fas fa-phone me-1 text-success"></i>
-                                        <a href="tel:{{ medecin.telephone_professionnel }}" class="text-decoration-none">
-                                            {{ medecin.telephone_professionnel }}
-                                        </a>
-                                    {% else %}
-                                        <span class="text-muted">Non renseigné</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Statut du compte</label>
-                                <p class="form-control-plaintext">
-                                    {% if medecin.utilisateur.actif %}
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check-circle me-1"></i>Actif
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-times-circle me-1"></i>Inactif
-                                        </span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted">Compte créé le</label>
-                                <p class="form-control-plaintext">
-                                    <i class="fas fa-calendar-plus me-1 text-muted"></i>
-                                    {{ medecin.utilisateur.date_creation_compte|date:"d/m/Y à H:i" }}
-                                </p>
-                            </div>
-                        </div>
+    <!-- Statistiques et actions -->
+    <div class="col-lg-4 mb-4">
+      <!-- Statistiques rapides -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h6 class="mb-0">
+            <i class="fas fa-chart-bar me-2 text-primary"></i>Statistiques
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">RDV à venir</span>
+            <span class="badge bg-primary fs-6"
+              >{{ prochains_rdv|length }}</span
+            >
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">RDV aujourd'hui</span>
+            <span class="badge bg-warning fs-6">
+              {{ prochains_rdv|length|add:"-5" }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-muted">Dernière connexion</span>
+            <small class="text-muted">
+              {{ medecin.utilisateur.last_login|date:"d/m/Y"|default:"Jamais" }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions rapides -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0">
+            <i class="fas fa-bolt me-2 text-success"></i>Actions rapides
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a
+              href="{% url 'gestion_rdv:planning_medecin' medecin.pk %}"
+              class="btn btn-primary"
+            >
+              <i class="fas fa-calendar me-2"></i>Voir le planning
+            </a>
+
+            {% if user.role == 'SECRETAIRE' %}
+            <a
+              href="{% url 'gestion_rdv:rdv_create' %}?medecin={{ medecin.pk }}"
+              class="btn btn-success"
+            >
+              <i class="fas fa-plus-circle me-2"></i>Nouveau RDV
+            </a>
+
+            <a
+              href="{% url 'gestion_rdv:medecin_update' medecin.pk %}"
+              class="btn btn-warning"
+            >
+              <i class="fas fa-edit me-2"></i>Modifier le profil
+            </a>
+            {% endif %}
+
+            <a
+              href="{% url 'gestion_rdv:export_planning_medecin' medecin.pk %}"
+              class="btn btn-danger"
+            >
+              <i class="fas fa-file-pdf me-2"></i>Export PDF
+            </a>
+
+            <a
+              href="{% url 'gestion_rdv:rdv_list' %}?medecin={{ medecin.pk }}"
+              class="btn btn-outline-secondary"
+            >
+              <i class="fas fa-list me-2"></i>Tous ses RDV
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prochains rendez-vous -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div
+          class="card-header bg-light d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2 text-success"></i>Prochains
+            rendez-vous
+          </h5>
+          <a
+            href="{% url 'gestion_rdv:rdv_list' %}?medecin={{ medecin.pk }}"
+            class="btn btn-sm btn-outline-success"
+          >
+            <i class="fas fa-list me-1"></i>Voir tout
+          </a>
+        </div>
+        <div class="card-body">
+          {% if prochains_rdv %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date & Heure</th>
+                  <th>Patient</th>
+                  <th>Type</th>
+                  <th>Durée</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rdv in prochains_rdv %}
+                <tr>
+                  <td>
+                    <div class="fw-bold text-primary">
+                      {{ rdv.date_heure_debut|date:"d/m/Y" }}
                     </div>
-                    
-                    <!-- Horaires de disponibilité -->
-                    {% if medecin.get_horaires %}
-                        <hr class="my-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-muted">
-                                <i class="fas fa-clock me-1"></i>Horaires de consultation
-                            </label>
-                            <div class="row mt-3">
-                                {% for jour, horaire in medecin.get_horaires.items %}
-                                    <div class="col-md-4 col-sm-6 mb-3">
-                                        <div class="card border-light">
-                                            <div class="card-body text-center py-3">
-                                                <h6 class="card-title text-capitalize mb-1">{{ jour }}</h6>
-                                                <p class="card-text text-muted mb-0">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    {{ horaire.debut }} - {{ horaire.fin }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                    <small class="text-muted"
+                      >{{ rdv.date_heure_debut|date:"H:i" }}</small
+                    >
+                  </td>
+                  <td>
+                    <div class="fw-bold">
+                      {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
+                    </div>
+                    <small class="text-muted">
+                      <i class="fas fa-phone me-1"></i>{{ rdv.patient.telephone
+                      }}
+                    </small>
+                  </td>
+                  <td>
+                    <span class="badge bg-info"
+                      >{{ rdv.get_type_consultation_display }}</span
+                    >
+                  </td>
+                  <td>{{ rdv.duree_minutes }} min</td>
+                  <td>
+                    {% if rdv.statut_rdv == 'PLANIFIE' %}
+                    <span class="badge bg-warning"
+                      >{{ rdv.get_statut_rdv_display }}</span
+                    >
+                    {% elif rdv.statut_rdv == 'CONFIRME' %}
+                    <span class="badge bg-success"
+                      >{{ rdv.get_statut_rdv_display }}</span
+                    >
+                    {% elif rdv.statut_rdv == 'TERMINE' %}
+                    <span class="badge bg-primary"
+                      >{{ rdv.get_statut_rdv_display }}</span
+                    >
                     {% else %}
-                        <hr class="my-4">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Horaires non configurés</strong><br>
-                            Les horaires de consultation de ce médecin n'ont pas encore été définis.
-                        </div>
+                    <span class="badge bg-secondary"
+                      >{{ rdv.get_statut_rdv_display }}</span
+                    >
                     {% endif %}
-                </div>
-            </div>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <a
+                        href="{% url 'gestion_rdv:rdv_detail' rdv.pk %}"
+                        class="btn btn-outline-primary"
+                        title="Voir détails"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      {% if user.role == 'SECRETAIRE' %}
+                      <a
+                        href="{% url 'gestion_rdv:rdv_update' rdv.pk %}"
+                        class="btn btn-outline-warning"
+                        title="Modifier"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4">
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+            <h6 class="text-muted">Aucun rendez-vous planifié</h6>
+            <p class="text-muted mb-0">
+              Ce médecin n'a actuellement aucun rendez-vous à venir.
+            </p>
+            {% if user.role == 'SECRETAIRE' %}
+            <a
+              href="{% url 'gestion_rdv:rdv_create' %}?medecin={{ medecin.pk }}"
+              class="btn btn-success mt-3"
+            >
+              <i class="fas fa-plus me-1"></i>Planifier un RDV
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
-
-        <!-- Statistiques et actions -->
-        <div class="col-lg-4 mb-4">
-            <!-- Statistiques rapides -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-chart-bar me-2 text-primary"></i>Statistiques
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">RDV à venir</span>
-                        <span class="badge bg-primary fs-6">{{ prochains_rdv|length }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">RDV aujourd'hui</span>
-                        <span class="badge bg-warning fs-6">
-                            {{ prochains_rdv|length|add:"-5" }}
-                        </span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Dernière connexion</span>
-                        <small class="text-muted">
-                            {{ medecin.utilisateur.last_login|date:"d/m/Y"|default:"Jamais" }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Actions rapides -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-bolt me-2 text-success"></i>Actions rapides
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'gestion_rdv:planning_medecin' medecin.pk %}" 
-                           class="btn btn-primary">
-                            <i class="fas fa-calendar me-2"></i>Voir le planning
-                        </a>
-                        
-                        {% if user.role == 'SECRETAIRE' %}
-                            <a href="{% url 'gestion_rdv:rdv_create' %}?medecin={{ medecin.pk }}" 
-                               class="btn btn-success">
-                                <i class="fas fa-plus-circle me-2"></i>Nouveau RDV
-                            </a>
-                            
-                            <a href="{% url 'gestion_rdv:medecin_update' medecin.pk %}" 
-                               class="btn btn-warning">
-                                <i class="fas fa-edit me-2"></i>Modifier le profil
-                            </a>
-                        {% endif %}
-                        
-                        <a href="{% url 'gestion_rdv:export_planning_medecin' medecin.pk %}" 
-                           class="btn btn-danger">
-                            <i class="fas fa-file-pdf me-2"></i>Export PDF
-                        </a>
-                        
-                        <a href="{% url 'gestion_rdv:rdv_list' %}?medecin={{ medecin.pk }}" 
-                           class="btn btn-outline-secondary">
-                            <i class="fas fa-list me-2"></i>Tous ses RDV
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-
-    <!-- Prochains rendez-vous -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar-alt me-2 text-success"></i>Prochains rendez-vous
-                    </h5>
-                    <a href="{% url 'gestion_rdv:rdv_list' %}?medecin={{ medecin.pk }}" 
-                       class="btn btn-sm btn-outline-success">
-                        <i class="fas fa-list me-1"></i>Voir tout
-                    </a>
-                </div>
-                <div class="card-body">
-                    {% if prochains_rdv %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Date & Heure</th>
-                                        <th>Patient</th>
-                                        <th>Type</th>
-                                        <th>Durée</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for rdv in prochains_rdv %}
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold text-primary">
-                                                {{ rdv.date_heure_debut|date:"d/m/Y" }}
-                                            </div>
-                                            <small class="text-muted">{{ rdv.date_heure_debut|date:"H:i" }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="fw-bold">{{ rdv.patient.nom }} {{ rdv.patient.prenom }}</div>
-                                            <small class="text-muted">
-                                                <i class="fas fa-phone me-1"></i>{{ rdv.patient.telephone }}
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">{{ rdv.get_type_consultation_display }}</span>
-                                        </td>
-                                        <td>{{ rdv.duree_minutes }} min</td>
-                                        <td>
-                                            {% if rdv.statut_rdv == 'PLANIFIE' %}
-                                                <span class="badge bg-warning">{{ rdv.get_statut_rdv_display }}</span>
-                                            {% elif rdv.statut_rdv == 'CONFIRME' %}
-                                                <span class="badge bg-success">{{ rdv.get_statut_rdv_display }}</span>
-                                            {% elif rdv.statut_rdv == 'TERMINE' %}
-                                                <span class="badge bg-primary">{{ rdv.get_statut_rdv_display }}</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">{{ rdv.get_statut_rdv_display }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'gestion_rdv:rdv_detail' rdv.pk %}" 
-                                                   class="btn btn-outline-primary" title="Voir détails">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                {% if user.role == 'SECRETAIRE' %}
-                                                    <a href="{% url 'gestion_rdv:rdv_update' rdv.pk %}" 
-                                                       class="btn btn-outline-warning" title="Modifier">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                            <h6 class="text-muted">Aucun rendez-vous planifié</h6>
-                            <p class="text-muted mb-0">Ce médecin n'a actuellement aucun rendez-vous à venir.</p>
-                            {% if user.role == 'SECRETAIRE' %}
-                                <a href="{% url 'gestion_rdv:rdv_create' %}?medecin={{ medecin.pk }}" 
-                                   class="btn btn-success mt-3">
-                                    <i class="fas fa-plus me-1"></i>Planifier un RDV
-                                </a>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
+{% endblock %} {% block extra_css %}
 <style>
-.bg-gradient-info {
+  .bg-gradient-info {
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-}
+  }
 
-.card {
+  .card {
     transition: transform 0.2s ease-in-out;
-}
+  }
 
-.card:hover {
+  .card:hover {
     transform: translateY(-2px);
-}
+  }
 
-.form-control-plaintext {
+  .form-control-plaintext {
     padding-left: 0;
     padding-right: 0;
     margin-bottom: 0;
-}
+  }
 
-.badge.fs-6 {
+  .badge.fs-6 {
     font-size: 0.9rem !important;
-}
+  }
 
-.btn-group-sm .btn {
+  .btn-group-sm .btn {
     padding: 0.25rem 0.5rem;
-}
+  }
 
-.table td {
+  .table td {
     vertical-align: middle;
-}
+  }
 
-.card-body .d-grid .btn {
+  .card-body .d-grid .btn {
     justify-content: flex-start;
-}
+  }
 </style>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // Animation d'apparition des cartes
-    const cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll(".card");
     cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
+      card.style.opacity = "0";
+      card.style.transform = "translateY(30px)";
+
+      setTimeout(() => {
+        card.style.transition = "all 0.6s ease";
+        card.style.opacity = "1";
+        card.style.transform = "translateY(0)";
+      }, index * 100);
     });
 
     // Tooltip pour les boutons d'actions
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll("[title]")
+    );
     tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+      return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-});
+  });
 </script>
 {% endblock %}

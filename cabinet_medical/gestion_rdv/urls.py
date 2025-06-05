@@ -4,8 +4,9 @@ from . import views
 app_name = 'gestion_rdv'
 
 urlpatterns = [
-    # Dashboard
-    path('dashboard/', views.dashboard, name='dashboard'),
+    # Dashboard - both root and dashboard/ paths
+    path('', views.dashboard, name='dashboard'),  # Handle root URL within app
+    path('dashboard/', views.dashboard, name='dashboard_alt'),  # Alternative dashboard URL
     
     # Gestion des patients
     path('patients/', views.PatientListView.as_view(), name='patients_list'),

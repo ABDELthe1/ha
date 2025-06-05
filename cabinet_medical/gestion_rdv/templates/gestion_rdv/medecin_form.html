@@ -13,7 +13,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{% url 'dashboard' %}">
+            <a href="{% url 'gestion_rdv:dashboard' %}">
                 <i class="fas fa-home me-1"></i>Accueil
             </a>
         </li>
@@ -219,8 +219,8 @@
                         </div>
                         
                         <div class="row">
-                            {% for jour in 'lundi,mardi,mercredi,jeudi,vendredi,samedi'|split:',' %}
-                                <div class="col-md-6 mb-3">
+                         {% for jour in jours_semaine %}
+                          <div class="col-md-6 mb-3">
                                     <div class="card border-light">
                                         <div class="card-header bg-light py-2">
                                             <h6 class="mb-0 text-capitalize">
@@ -402,7 +402,7 @@
     font-weight: 500;
 }
 
-.card-header h6 {
+.card-header h6, .card-header h5 {
     font-weight: 600;
 }
 

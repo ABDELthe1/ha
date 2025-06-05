@@ -1,438 +1,489 @@
 {% extends 'gestion_rdv/base.html' %}
 {% load static %}
-
 {% block title %}
-    {% if rdv.pk %}
-        Modifier RDV {{ rdv.patient.nom }} {{ rdv.patient.prenom }} - Cabinet Médical
-    {% else %}
-        Nouveau Rendez-vous - Cabinet Médical
-    {% endif %}
+{% if rdv.pk %}
+Modifier RDV {{ rdv.patient.nom }} {{ rdv.patient.prenom }} - Cabinet Médical
+{% else %}
+Nouveau Rendez-vous - Cabinet Médical
+{% endif %}
 {% endblock %}
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="{% url 'dashboard' %}">
-                <i class="fas fa-home me-1"></i>Accueil
-            </a>
-        </li>
-        <li class="breadcrumb-item">
-            <a href="{% url 'gestion_rdv:rdv_list' %}">
-                <i class="fas fa-calendar-alt me-1"></i>Rendez-vous
-            </a>
-        </li>
-        <li class="breadcrumb-item active">
-            {% if rdv.pk %}
-                Modifier RDV
-            {% else %}
-                Nouveau rendez-vous
-            {% endif %}
-        </li>
-    </ol>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{% url 'gestion_rdv:dashboard' %}">
+        <i class="fas fa-home me-1"></i>Accueil
+      </a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'gestion_rdv:rdv_list' %}">
+        <i class="fas fa-calendar-alt me-1"></i>Rendez-vous
+      </a>
+    </li>
+    <li class="breadcrumb-item active">
+      {% if rdv.pk %} Modifier RDV {% else %} Nouveau rendez-vous {% endif %}
+    </li>
+  </ol>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-success text-white border-0 shadow">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h2 class="mb-2">
-                                <i class="fas fa-calendar-plus me-2"></i>
-                                {% if rdv.pk %}
-                                    Modifier le rendez-vous
-                                {% else %}
-                                    Nouveau rendez-vous
-                                {% endif %}
-                            </h2>
-                            <p class="mb-0 opacity-75">
-                                {% if rdv.pk %}
-                                    Modification du RDV de {{ rdv.patient.nom }} {{ rdv.patient.prenom }}
-                                {% else %}
-                                    Planification d'un nouveau rendez-vous médical
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <div class="h1 mb-0 opacity-75">
-                                <i class="fas fa-{% if rdv.pk %}edit{% else %}plus-circle{% endif %}"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <!-- En-tête -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-gradient-success text-white border-0 shadow">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h2 class="mb-2">
+                <i class="fas fa-calendar-plus me-2"></i>
+                {% if rdv.pk %} Modifier le rendez-vous {% else %} Nouveau
+                rendez-vous {% endif %}
+              </h2>
+              <p class="mb-0 opacity-75">
+                {% if rdv.pk %} Modification du RDV de {{ rdv.patient.nom }} {{
+                rdv.patient.prenom }} {% else %} Planification d'un nouveau
+                rendez-vous médical {% endif %}
+              </p>
             </div>
+            <div class="col-md-4 text-md-end">
+              <div class="h1 mb-0 opacity-75">
+                <i
+                  class="fas fa-{% if rdv.pk %}edit{% else %}plus-circle{% endif %}"
+                ></i>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <form method="post" novalidate id="rdv-form">
-        {% csrf_token %}
-        
-        <div class="row">
-            <!-- Formulaire principal -->
-            <div class="col-lg-8 mb-4">
-                <!-- Sélection patient et médecin -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-users me-2 text-primary"></i>Patient et Médecin
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="{{ form.patient.id_for_label }}" class="form-label required">
-                                        <i class="fas fa-user me-1"></i>{{ form.patient.label }}
-                                    </label>
-                                    {{ form.patient }}
-                                    {% if form.patient.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.patient.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    <div class="form-text">
-                                        <a href="{% url 'gestion_rdv:patient_create' %}" 
-                                           class="text-decoration-none" target="_blank">
-                                            <i class="fas fa-plus me-1"></i>Ajouter un nouveau patient
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="{{ form.medecin.id_for_label }}" class="form-label required">
-                                        <i class="fas fa-user-md me-1"></i>{{ form.medecin.label }}
-                                    </label>
-                                    {{ form.medecin }}
-                                    {% if form.medecin.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.medecin.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    <div id="medecin-info" class="form-text"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <form method="post" novalidate id="rdv-form">
+    {% csrf_token %}
 
-                <!-- Date, heure et durée -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-clock me-2 text-warning"></i>Date et heure
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="{{ form.date_heure_debut.id_for_label }}" class="form-label required">
-                                        <i class="fas fa-calendar me-1"></i>{{ form.date_heure_debut.label }}
-                                    </label>
-                                    {{ form.date_heure_debut }}
-                                    {% if form.date_heure_debut.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.date_heure_debut.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    <div class="form-text">Date et heure de début du rendez-vous</div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="{{ form.duree_minutes.id_for_label }}" class="form-label required">
-                                        <i class="fas fa-hourglass-half me-1"></i>{{ form.duree_minutes.label }}
-                                    </label>
-                                    {{ form.duree_minutes }}
-                                    {% if form.duree_minutes.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.duree_minutes.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    <div class="form-text">Durée en minutes (15-180)</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Heure de fin calculée -->
-                        <div class="alert alert-info" id="heure-fin-info" style="display: none;">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Heure de fin prévue :</strong> <span id="heure-fin-text"></span>
-                        </div>
-                        
-                        <!-- Créneaux suggérés -->
-                        <div id="creneaux-sugeres" style="display: none;">
-                            <h6 class="mt-3 mb-2">
-                                <i class="fas fa-lightbulb me-1 text-warning"></i>Créneaux libres suggérés
-                            </h6>
-                            <div id="creneaux-list" class="d-flex flex-wrap gap-2"></div>
-                        </div>
-                    </div>
+    <div class="row">
+      <!-- Formulaire principal -->
+      <div class="col-lg-8 mb-4">
+        <!-- Sélection patient et médecin -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="fas fa-users me-2 text-primary"></i>Patient et Médecin
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label
+                    for="{{ form.patient.id_for_label }}"
+                    class="form-label required"
+                  >
+                    <i class="fas fa-user me-1"></i>{{ form.patient.label }}
+                  </label>
+                  {{ form.patient }}
+                  {% if form.patient.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.patient.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <div class="form-text">
+                    <a
+                      href="{% url 'gestion_rdv:patient_create' %}"
+                      class="text-decoration-none"
+                      target="_blank"
+                    >
+                      <i class="fas fa-plus me-1"></i>Ajouter un nouveau patient
+                    </a>
+                  </div>
                 </div>
+              </div>
 
-                <!-- Type de consultation et notes -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fas fa-stethoscope me-2 text-info"></i>Détails de la consultation
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="{{ form.type_consultation.id_for_label }}" class="form-label required">
-                                        <i class="fas fa-list me-1"></i>{{ form.type_consultation.label }}
-                                    </label>
-                                    {{ form.type_consultation }}
-                                    {% if form.type_consultation.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.type_consultation.errors %}
-                                                {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.notes_rdv.id_for_label }}" class="form-label">
-                                <i class="fas fa-sticky-note me-1"></i>{{ form.notes_rdv.label }}
-                            </label>
-                            {{ form.notes_rdv }}
-                            {% if form.notes_rdv.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {% for error in form.notes_rdv.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            <div class="form-text">
-                                Notes particulières pour ce rendez-vous (motif, préparation, etc.)
-                            </div>
-                        </div>
-                        
-                        <!-- Templates de notes -->
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="fas fa-magic me-1"></i>Templates de notes
-                            </label>
-                            <div class="btn-group-sm d-flex flex-wrap gap-1">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                        onclick="addNote('Consultation de routine')">
-                                    Routine
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                        onclick="addNote('Consultation de suivi')">
-                                    Suivi
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                        onclick="addNote('Renouvellement ordonnance')">
-                                    Ordonnance
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                        onclick="addNote('Résultats examens')">
-                                    Résultats
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                        onclick="addNote('À jeun requis')">
-                                    À jeun
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label
+                    for="{{ form.medecin.id_for_label }}"
+                    class="form-label required"
+                  >
+                    <i class="fas fa-user-md me-1"></i>{{ form.medecin.label }}
+                  </label>
+                  {{ form.medecin }}
+                  {% if form.medecin.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.medecin.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <div id="medecin-info" class="form-text"></div>
                 </div>
+              </div>
             </div>
-
-            <!-- Sidebar avec informations et actions -->
-            <div class="col-lg-4">
-                <!-- Actions -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="fas fa-tools me-2 text-primary"></i>Actions
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-2"></i>
-                                {% if rdv.pk %}Enregistrer les modifications{% else %}Créer le rendez-vous{% endif %}
-                            </button>
-                            
-                            <a href="{% url 'gestion_rdv:rdv_list' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
-                            </a>
-                            
-                            {% if rdv.pk %}
-                                <a href="{% url 'gestion_rdv:rdv_detail' rdv.pk %}" class="btn btn-outline-info">
-                                    <i class="fas fa-eye me-2"></i>Voir les détails
-                                </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Validation en temps réel -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="fas fa-check-circle me-2 text-success"></i>Validation
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="small">
-                            <div id="validation-patient" class="mb-2">
-                                <i class="fas fa-circle text-muted me-1"></i>
-                                <span class="text-muted">Patient sélectionné</span>
-                            </div>
-                            <div id="validation-medecin" class="mb-2">
-                                <i class="fas fa-circle text-muted me-1"></i>
-                                <span class="text-muted">Médecin sélectionné</span>
-                            </div>
-                            <div id="validation-date" class="mb-2">
-                                <i class="fas fa-circle text-muted me-1"></i>
-                                <span class="text-muted">Date et heure</span>
-                            </div>
-                            <div id="validation-conflit">
-                                <i class="fas fa-circle text-muted me-1"></i>
-                                <span class="text-muted">Vérification des conflits</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Aide -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="fas fa-question-circle me-2 text-info"></i>Aide
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="small">
-                            <div class="mb-3">
-                                <strong>Champs obligatoires :</strong><br>
-                                Patient, médecin, date/heure et type de consultation sont requis.
-                            </div>
-                            
-                            <div class="mb-3">
-                                <strong>Horaires :</strong><br>
-                                Les RDV peuvent être pris entre 8h et 18h en semaine.
-                            </div>
-                            
-                            <div class="mb-3">
-                                <strong>Durée :</strong><br>
-                                Minimum 15 minutes, maximum 3 heures, par tranches de 15 minutes.
-                            </div>
-                            
-                            <div class="mb-0">
-                                <strong>Conflits :</strong><br>
-                                Le système vérifie automatiquement les conflits d'horaires.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Raccourcis clavier -->
-                <div class="card border-warning border-0 shadow-sm">
-                    <div class="card-header bg-warning text-dark">
-                        <h6 class="mb-0">
-                            <i class="fas fa-keyboard me-2"></i>Raccourcis
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="small">
-                            <p class="mb-2"><kbd>Ctrl</kbd> + <kbd>S</kbd> : Sauvegarder</p>
-                            <p class="mb-2"><kbd>Ctrl</kbd> + <kbd>P</kbd> : Voir planning</p>
-                            <p class="mb-0"><kbd>Esc</kbd> : Retour liste</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-    </form>
+
+        <!-- Date, heure et durée -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="fas fa-clock me-2 text-warning"></i>Date et heure
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label
+                    for="{{ form.date_heure_debut.id_for_label }}"
+                    class="form-label required"
+                  >
+                    <i class="fas fa-calendar me-1"></i>{{
+                    form.date_heure_debut.label }}
+                  </label>
+                  {{ form.date_heure_debut }}
+                  {% if form.date_heure_debut.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.date_heure_debut.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <div class="form-text">
+                    Date et heure de début du rendez-vous
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label
+                    for="{{ form.duree_minutes.id_for_label }}"
+                    class="form-label required"
+                  >
+                    <i class="fas fa-hourglass-half me-1"></i>{{
+                    form.duree_minutes.label }}
+                  </label>
+                  {{ form.duree_minutes }}
+                  {% if form.duree_minutes.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.duree_minutes.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <div class="form-text">Durée en minutes (15-180)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heure de fin calculée -->
+            <div
+              class="alert alert-info"
+              id="heure-fin-info"
+              style="display: none"
+            >
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Heure de fin prévue :</strong>
+              <span id="heure-fin-text"></span>
+            </div>
+
+            <!-- Créneaux suggérés -->
+            <div id="creneaux-sugeres" style="display: none">
+              <h6 class="mt-3 mb-2">
+                <i class="fas fa-lightbulb me-1 text-warning"></i>Créneaux
+                libres suggérés
+              </h6>
+              <div id="creneaux-list" class="d-flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Type de consultation et notes -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="fas fa-stethoscope me-2 text-info"></i>Détails de la
+              consultation
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label
+                    for="{{ form.type_consultation.id_for_label }}"
+                    class="form-label required"
+                  >
+                    <i class="fas fa-list me-1"></i>{{
+                    form.type_consultation.label }}
+                  </label>
+                  {{ form.type_consultation }}
+                  {% if form.type_consultation.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.type_consultation.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.notes_rdv.id_for_label }}" class="form-label">
+                <i class="fas fa-sticky-note me-1"></i>{{ form.notes_rdv.label
+                }}
+              </label>
+              {{ form.notes_rdv }}
+              {% if form.notes_rdv.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.notes_rdv.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+              {% endif %}
+              <div class="form-text">
+                Notes particulières pour ce rendez-vous (motif, préparation,
+                etc.)
+              </div>
+            </div>
+
+            <!-- Templates de notes -->
+            <div class="mb-3">
+              <label class="form-label">
+                <i class="fas fa-magic me-1"></i>Templates de notes
+              </label>
+              <div class="btn-group-sm d-flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="addNote('Consultation de routine')"
+                >
+                  Routine
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="addNote('Consultation de suivi')"
+                >
+                  Suivi
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="addNote('Renouvellement ordonnance')"
+                >
+                  Ordonnance
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="addNote('Résultats examens')"
+                >
+                  Résultats
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  onclick="addNote('À jeun requis')"
+                >
+                  À jeun
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar avec informations et actions -->
+      <div class="col-lg-4">
+        <!-- Actions -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fas fa-tools me-2 text-primary"></i>Actions
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save me-2"></i>
+                {% if rdv.pk %}Enregistrer les modifications{% else %}Créer le
+                rendez-vous{% endif %}
+              </button>
+
+              <a
+                href="{% url 'gestion_rdv:rdv_list' %}"
+                class="btn btn-outline-secondary"
+              >
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+              </a>
+
+              {% if rdv.pk %}
+              <a
+                href="{% url 'gestion_rdv:rdv_detail' rdv.pk %}"
+                class="btn btn-outline-info"
+              >
+                <i class="fas fa-eye me-2"></i>Voir les détails
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Validation en temps réel -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fas fa-check-circle me-2 text-success"></i>Validation
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="small">
+              <div id="validation-patient" class="mb-2">
+                <i class="fas fa-circle text-muted me-1"></i>
+                <span class="text-muted">Patient sélectionné</span>
+              </div>
+              <div id="validation-medecin" class="mb-2">
+                <i class="fas fa-circle text-muted me-1"></i>
+                <span class="text-muted">Médecin sélectionné</span>
+              </div>
+              <div id="validation-date" class="mb-2">
+                <i class="fas fa-circle text-muted me-1"></i>
+                <span class="text-muted">Date et heure</span>
+              </div>
+              <div id="validation-conflit">
+                <i class="fas fa-circle text-muted me-1"></i>
+                <span class="text-muted">Vérification des conflits</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aide -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fas fa-question-circle me-2 text-info"></i>Aide
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="small">
+              <div class="mb-3">
+                <strong>Champs obligatoires :</strong><br />
+                Patient, médecin, date/heure et type de consultation sont
+                requis.
+              </div>
+
+              <div class="mb-3">
+                <strong>Horaires :</strong><br />
+                Les RDV peuvent être pris entre 8h et 18h en semaine.
+              </div>
+
+              <div class="mb-3">
+                <strong>Durée :</strong><br />
+                Minimum 15 minutes, maximum 3 heures, par tranches de 15
+                minutes.
+              </div>
+
+              <div class="mb-0">
+                <strong>Conflits :</strong><br />
+                Le système vérifie automatiquement les conflits d'horaires.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raccourcis clavier -->
+        <div class="card border-warning border-0 shadow-sm">
+          <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0"><i class="fas fa-keyboard me-2"></i>Raccourcis</h6>
+          </div>
+          <div class="card-body">
+            <div class="small">
+              <p class="mb-2"><kbd>Ctrl</kbd> + <kbd>S</kbd> : Sauvegarder</p>
+              <p class="mb-2"><kbd>Ctrl</kbd> + <kbd>P</kbd> : Voir planning</p>
+              <p class="mb-0"><kbd>Esc</kbd> : Retour liste</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-.bg-gradient-success {
+  .bg-gradient-success {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
+  }
 
-.card {
+  .card {
     transition: transform 0.2s ease-in-out;
-}
+  }
 
-.card:hover {
+  .card:hover {
     transform: translateY(-2px);
-}
+  }
 
-.form-control, .form-select, textarea {
+  .form-control,
+  .form-select,
+  textarea {
     border-radius: 8px;
     border: 2px solid #e9ecef;
     transition: all 0.3s ease;
-}
+  }
 
-.form-control:focus, .form-select:focus, textarea:focus {
+  .form-control:focus,
+  .form-select:focus,
+  textarea:focus {
     border-color: #28a745;
     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-}
+  }
 
-.form-control.is-valid {
+  .form-control.is-valid {
     border-color: #28a745;
-}
+  }
 
-.form-control.is-invalid {
+  .form-control.is-invalid {
     border-color: #dc3545;
-}
+  }
 
-.invalid-feedback {
+  .invalid-feedback {
     display: block !important;
-}
+  }
 
-.btn {
+  .btn {
     border-radius: 8px;
     font-weight: 500;
-}
+  }
 
-.form-label.required::after {
+  .form-label.required::after {
     content: " *";
     color: #dc3545;
-}
+  }
 
-.card-header h6, .card-header h5 {
+  .card-header h6,
+  .card-header h5 {
     font-weight: 600;
-}
+  }
 
-.form-text {
+  .form-text {
     font-size: 0.8rem;
     color: #6c757d;
-}
+  }
 
-.alert {
+  .alert {
     border-radius: 8px;
-}
+  }
 
-.creneau-suggere {
+  .creneau-suggere {
     background-color: #e3f2fd;
     border: 1px solid #2196f3;
     border-radius: 20px;
@@ -440,37 +491,37 @@
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
-}
+  }
 
-.creneau-suggere:hover {
+  .creneau-suggere:hover {
     background-color: #2196f3;
     color: white;
-}
+  }
 
-kbd {
+  kbd {
     background-color: #495057;
     border-radius: 3px;
     color: #fff;
     font-size: 0.75rem;
     padding: 2px 4px;
-}
+  }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener("DOMContentLoaded", function () {
     // Animation d'apparition
-    const cards = document.querySelectorAll('.card');
+    const cards = document.querySelectorAll(".card");
     cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
+      card.style.opacity = "0";
+      card.style.transform = "translateY(30px)";
+
+      setTimeout(() => {
+        card.style.transition = "all 0.6s ease";
+        card.style.opacity = "1";
+        card.style.transform = "translateY(0)";
+      }, index * 100);
     });
 
     // Validation en temps réel
@@ -480,196 +531,201 @@ document.addEventListener('DOMContentLoaded', function() {
     const dureeInput = document.querySelector('input[name="duree_minutes"]');
 
     if (patientSelect) {
-        patientSelect.addEventListener('change', function() {
-            validateField('patient', this.value !== '', 'Patient sélectionné');
-        });
+      patientSelect.addEventListener("change", function () {
+        validateField("patient", this.value !== "", "Patient sélectionné");
+      });
     }
 
     if (medecinSelect) {
-        medecinSelect.addEventListener('change', function() {
-            validateField('medecin', this.value !== '', 'Médecin sélectionné');
-            updateMedecinInfo(this.value);
-            checkCreneauxLibres();
-        });
+      medecinSelect.addEventListener("change", function () {
+        validateField("medecin", this.value !== "", "Médecin sélectionné");
+        updateMedecinInfo(this.value);
+        checkCreneauxLibres();
+      });
     }
 
     if (dateInput) {
-        dateInput.addEventListener('change', function() {
-            const isValid = this.value !== '';
-            validateField('date', isValid, 'Date et heure définies');
-            if (isValid) {
-                calculateEndTime();
-                checkCreneauxLibres();
-            }
-        });
+      dateInput.addEventListener("change", function () {
+        const isValid = this.value !== "";
+        validateField("date", isValid, "Date et heure définies");
+        if (isValid) {
+          calculateEndTime();
+          checkCreneauxLibres();
+        }
+      });
     }
 
     if (dureeInput) {
-        dureeInput.addEventListener('input', function() {
-            calculateEndTime();
-        });
+      dureeInput.addEventListener("input", function () {
+        calculateEndTime();
+      });
     }
 
     // Raccourcis clavier
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key) {
-                case 's':
-                    e.preventDefault();
-                    document.getElementById('rdv-form').submit();
-                    break;
-                case 'p':
-                    e.preventDefault();
-                    window.open('{% url "gestion_rdv:planning" %}', '_blank');
-                    break;
-            }
-        } else if (e.key === 'Escape') {
-            window.location.href = '{% url "gestion_rdv:rdv_list" %}';
+    document.addEventListener("keydown", function (e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case "s":
+            e.preventDefault();
+            document.getElementById("rdv-form").submit();
+            break;
+          case "p":
+            e.preventDefault();
+            window.open('{% url "gestion_rdv:planning" %}', "_blank");
+            break;
         }
+      } else if (e.key === "Escape") {
+        window.location.href = '{% url "gestion_rdv:rdv_list" %}';
+      }
     });
 
     // Initialiser les validations si des valeurs sont déjà présentes
-    if (patientSelect && patientSelect.value) validateField('patient', true, 'Patient sélectionné');
+    if (patientSelect && patientSelect.value)
+      validateField("patient", true, "Patient sélectionné");
     if (medecinSelect && medecinSelect.value) {
-        validateField('medecin', true, 'Médecin sélectionné');
-        updateMedecinInfo(medecinSelect.value);
+      validateField("medecin", true, "Médecin sélectionné");
+      updateMedecinInfo(medecinSelect.value);
     }
     if (dateInput && dateInput.value) {
-        validateField('date', true, 'Date et heure définies');
-        calculateEndTime();
+      validateField("date", true, "Date et heure définies");
+      calculateEndTime();
     }
-});
+  });
 
-// Fonction de validation des champs
-function validateField(fieldName, isValid, label) {
-    const validationElement = document.querySelector(`#validation-${fieldName}`);
+  // Fonction de validation des champs
+  function validateField(fieldName, isValid, label) {
+    const validationElement = document.querySelector(
+      `#validation-${fieldName}`
+    );
     if (!validationElement) return;
-    
-    const icon = validationElement.querySelector('i');
-    const text = validationElement.querySelector('span');
-    
-    if (isValid) {
-        icon.className = 'fas fa-check-circle text-success me-1';
-        text.className = 'text-success';
-        text.textContent = label + ' ✓';
-    } else {
-        icon.className = 'fas fa-times-circle text-danger me-1';
-        text.className = 'text-danger';
-        text.textContent = label + ' ✗';
-    }
-}
 
-// Calculer l'heure de fin
-function calculateEndTime() {
+    const icon = validationElement.querySelector("i");
+    const text = validationElement.querySelector("span");
+
+    if (isValid) {
+      icon.className = "fas fa-check-circle text-success me-1";
+      text.className = "text-success";
+      text.textContent = label + " ✓";
+    } else {
+      icon.className = "fas fa-times-circle text-danger me-1";
+      text.className = "text-danger";
+      text.textContent = label + " ✗";
+    }
+  }
+
+  // Calculer l'heure de fin
+  function calculateEndTime() {
     const dateInput = document.querySelector('input[name="date_heure_debut"]');
     const dureeInput = document.querySelector('input[name="duree_minutes"]');
-    const heureFinInfo = document.getElementById('heure-fin-info');
-    const heureFinText = document.getElementById('heure-fin-text');
-    
-    if (dateInput.value && dureeInput.value) {
-        const dateDebut = new Date(dateInput.value);
-        const duree = parseInt(dureeInput.value);
-        const dateFin = new Date(dateDebut.getTime() + (duree * 60000));
-        
-        heureFinText.textContent = dateFin.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        heureFinInfo.style.display = 'block';
-    } else {
-        heureFinInfo.style.display = 'none';
-    }
-}
+    const heureFinInfo = document.getElementById("heure-fin-info");
+    const heureFinText = document.getElementById("heure-fin-text");
 
-// Mettre à jour les informations du médecin
-function updateMedecinInfo(medecinId) {
-    const medecinInfo = document.getElementById('medecin-info');
-    if (!medecinId) {
-        medecinInfo.innerHTML = '';
-        return;
+    if (dateInput.value && dureeInput.value) {
+      const dateDebut = new Date(dateInput.value);
+      const duree = parseInt(dureeInput.value);
+      const dateFin = new Date(dateDebut.getTime() + duree * 60000);
+
+      heureFinText.textContent = dateFin.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      heureFinInfo.style.display = "block";
+    } else {
+      heureFinInfo.style.display = "none";
     }
-    
+  }
+
+  // Mettre à jour les informations du médecin
+  function updateMedecinInfo(medecinId) {
+    const medecinInfo = document.getElementById("medecin-info");
+    if (!medecinId) {
+      medecinInfo.innerHTML = "";
+      return;
+    }
+
     // Simuler la récupération des infos médecin
     // Dans une vraie application, ceci serait un appel AJAX
-    medecinInfo.innerHTML = '<i class="fas fa-info-circle text-info me-1"></i>Spécialité et horaires du médecin sélectionné';
-}
+    medecinInfo.innerHTML =
+      '<i class="fas fa-info-circle text-info me-1"></i>Spécialité et horaires du médecin sélectionné';
+  }
 
-// Vérifier les créneaux libres
-function checkCreneauxLibres() {
+  // Vérifier les créneaux libres
+  function checkCreneauxLibres() {
     const medecinSelect = document.querySelector('select[name="medecin"]');
     const dateInput = document.querySelector('input[name="date_heure_debut"]');
-    const creneauxDiv = document.getElementById('creneaux-sugeres');
-    const creneauxList = document.getElementById('creneaux-list');
-    
+    const creneauxDiv = document.getElementById("creneaux-sugeres");
+    const creneauxList = document.getElementById("creneaux-list");
+
     if (!medecinSelect.value || !dateInput.value) {
-        creneauxDiv.style.display = 'none';
-        return;
+      creneauxDiv.style.display = "none";
+      return;
     }
-    
+
     // Simuler la vérification des créneaux
     // Dans une vraie application, ceci serait un appel AJAX
-    const creneauxLibres = ['09:00', '10:30', '14:00', '16:30'];
-    
-    creneauxList.innerHTML = '';
-    creneauxLibres.forEach(creneau => {
-        const creneauElement = document.createElement('span');
-        creneauElement.className = 'creneau-suggere';
-        creneauElement.textContent = creneau;
-        creneauElement.onclick = function() {
-            const date = new Date(dateInput.value);
-            const [hours, minutes] = creneau.split(':');
-            date.setHours(parseInt(hours), parseInt(minutes));
-            
-            // Format pour datetime-local input
-            const formattedDate = date.toISOString().slice(0, 16);
-            dateInput.value = formattedDate;
-            
-            calculateEndTime();
-            creneauxDiv.style.display = 'none';
-        };
-        creneauxList.appendChild(creneauElement);
-    });
-    
-    if (creneauxLibres.length > 0) {
-        creneauxDiv.style.display = 'block';
-    }
-}
+    const creneauxLibres = ["09:00", "10:30", "14:00", "16:30"];
 
-// Fonction pour ajouter des notes prédéfinies
-function addNote(noteText) {
+    creneauxList.innerHTML = "";
+    creneauxLibres.forEach((creneau) => {
+      const creneauElement = document.createElement("span");
+      creneauElement.className = "creneau-suggere";
+      creneauElement.textContent = creneau;
+      creneauElement.onclick = function () {
+        const date = new Date(dateInput.value);
+        const [hours, minutes] = creneau.split(":");
+        date.setHours(parseInt(hours), parseInt(minutes));
+
+        // Format pour datetime-local input
+        const formattedDate = date.toISOString().slice(0, 16);
+        dateInput.value = formattedDate;
+
+        calculateEndTime();
+        creneauxDiv.style.display = "none";
+      };
+      creneauxList.appendChild(creneauElement);
+    });
+
+    if (creneauxLibres.length > 0) {
+      creneauxDiv.style.display = "block";
+    }
+  }
+
+  // Fonction pour ajouter des notes prédéfinies
+  function addNote(noteText) {
     const notesTextarea = document.querySelector('textarea[name="notes_rdv"]');
     if (notesTextarea) {
-        const currentValue = notesTextarea.value;
-        const newValue = currentValue ? currentValue + '\n' + noteText : noteText;
-        notesTextarea.value = newValue;
-        notesTextarea.focus();
-        notesTextarea.setSelectionRange(newValue.length, newValue.length);
+      const currentValue = notesTextarea.value;
+      const newValue = currentValue ? currentValue + "\n" + noteText : noteText;
+      notesTextarea.value = newValue;
+      notesTextarea.focus();
+      notesTextarea.setSelectionRange(newValue.length, newValue.length);
     }
-}
+  }
 
-// Confirmation avant de quitter si des modifications ont été faites
-let formModified = false;
-const formInputs = document.querySelectorAll('input, select, textarea');
+  // Confirmation avant de quitter si des modifications ont été faites
+  let formModified = false;
+  const formInputs = document.querySelectorAll("input, select, textarea");
 
-formInputs.forEach(input => {
+  formInputs.forEach((input) => {
     const initialValue = input.value;
-    input.addEventListener('input', function() {
-        if (this.value !== initialValue) {
-            formModified = true;
-        }
+    input.addEventListener("input", function () {
+      if (this.value !== initialValue) {
+        formModified = true;
+      }
     });
-});
+  });
 
-window.addEventListener('beforeunload', function(e) {
+  window.addEventListener("beforeunload", function (e) {
     if (formModified) {
-        e.preventDefault();
-        e.returnValue = 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?';
+      e.preventDefault();
+      e.returnValue =
+        "Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?";
     }
-});
+  });
 
-// Réinitialiser le flag lors de la soumission
-document.querySelector('#rdv-form').addEventListener('submit', function() {
+  // Réinitialiser le flag lors de la soumission
+  document.querySelector("#rdv-form").addEventListener("submit", function () {
     formModified = false;
-});
+  });
 </script>
-{% endblock %>}
+{% endblock %}
